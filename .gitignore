@@ -1,4 +1,4 @@
-#ignore folders
+﻿#ignore folders
 .vs/
 Animals/.vs/Animals/
 Animals/x64/Debug/

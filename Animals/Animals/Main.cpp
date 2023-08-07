@@ -26,6 +26,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "gameObject.h"
+
 using namespace glm;
 using namespace std;
 
@@ -130,8 +132,69 @@ int main(int argc, char* argv[])
     float phi = 0; //vertical
     float theta = radians(90.0f); //horizontal
 
+    //-----MODELING USING gameObject class------
 
+    //Create a parent gameObject instance. 
+    //This object contains a refrence to all it's children object. 
+    //When transforming parent object position/rotation/scale, their children object will transformed relative to it
+    gameObject arm; 
+    //set arm position
+    arm.setTransformPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+    //create a parent gameObject
+    //This object (although still a parent object) will be a child of 'arm'
+    //This means that when arm moves, elbow will move accoridngly  
+    gameObject elbow;
+    //Make elbow a child of arm
+    arm.addChildObject(&elbow);
+    //This will transform the elbows position relative to it's parent object
+    //In this case, 'arm' is at (0,1,0)
+    //We will set 'elbow' at (0,2,0). Because elbow's position is relative to arm, it's world position is elbow_position + arm_position 
+    //elbow world position: (0,2,0) + (0,1,0) = (0,3,0)
+    elbow.setTransformPosition(glm::vec3(0.0f, 2.0f, 0.0f));
 
+    //Create a gameObject instance
+    //This object will be attached to the arm and be visible
+    gameObject upperArm;
+    //set which VAO this part of the model will use
+    upperArm.setVAO(vaTexturedCube);
+    //set the number of vertices that the assigned VAO has
+    upperArm.setVertCount(36);
+    //set texture for this part of the model
+    upperArm.setTexture(brickTextureID);
+    //set the scale for 'aesthetic' reasons 
+    upperArm.setTransformScale(glm::vec3(0.3f,2.0f,0.3f));
+    //Make 'upperArm' a child or 'arm'
+    arm.addChildObject(&upperArm);
+    //set the postion (relative to 'arm')
+    upperArm.setTransformPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+
+    //Create a gameObject instance
+    //This object will be attached to the 'elbow' and be visible
+    gameObject lowerArm;
+    //Make 'lowerArm' a child or 'elbow'
+    elbow.addChildObject(&lowerArm);
+    //set which VAO this part of the model will use
+    lowerArm.setVAO(vaTexturedCube);
+    //set the number of vertices that the assigned VAO has
+    lowerArm.setVertCount(36);
+    //set texture for this part of the model
+    lowerArm.setTexture(brickTextureID);
+    //set the scale for "aesthetic" reasons 
+    lowerArm.setTransformScale(glm::vec3(0.3f, 1.0f, 0.3f));
+    //set the postion (relative to 'elbow')
+    lowerArm.setTransformPosition(glm::vec3(0.0f, 0.5f, 0.0f));
+
+    //MODEL HIERARCHY
+    /*
+        arm--|
+             |--> upperArm
+             |
+             |--> elbow--|
+                         |--> lowerArm
+    */
+ 
+
+    float angle = 0.0f;
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {
@@ -161,7 +224,7 @@ int main(int argc, char* argv[])
         glBindTexture(GL_TEXTURE_2D, brickTextureID);
         glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
-
+        
         //Setting up vaTexturedCube
         glBindVertexArray(vaTexturedCube);
         glBindBuffer(GL_ARRAY_BUFFER, vaTexturedCube);
@@ -174,6 +237,15 @@ int main(int argc, char* argv[])
         SetUniformMat4(textureShader, "worldMatrix", textureCubeMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
       
+        //------DRAWING USING gameObject class------
+        //calling the draw function on parent object calls draw on all it's children
+        arm.drawModel(GL_TRIANGLES, textureShader, textureWorldMatrixLocation, colorWorldMatrixLocation, textureLocation);
+        //add some rotation to the entire arm
+        angle += 0.01;
+        arm.setTransformRotation(glm::vec3(0.0f,0.0f,80*std::sin(angle)));
+        //add some rotation to the elbow
+        elbow.setTransformRotation(glm::vec3(0.0f,0.0f, 80 * std::sin(angle)));
+
         //Color Cube
         //Setting program shader
         glUseProgram(colorShader);
