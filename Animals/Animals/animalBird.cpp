@@ -38,7 +38,7 @@ class Bird {
                                  bodySize.y/2, 
                                  1.0f * wingsSize.z/2);
       }
-      Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos) {
+      Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos   ) {
          this->shaderProgram = shaderProgram;
          this->vao = vao;
          this->texture1Uniform = texture1Uniform;

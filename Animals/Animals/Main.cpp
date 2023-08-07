@@ -243,6 +243,8 @@ int vao = createCubeVAO();
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
+        // ------------------------- SHADOW PASS -------------------------------
+        {
             glUseProgram(shadowShaderProgram);
             glViewport(0, 0, DEPTH_MAP_TEXTURE_SIZE, DEPTH_MAP_TEXTURE_SIZE);
             // Bind depth map texture as output framebuffer
@@ -251,7 +253,12 @@ int vao = createCubeVAO();
             glClear(GL_DEPTH_BUFFER_BIT);
 
             test1.drawShadow();
+        }
 
+        // ----------------------------------------------------------------------------
+        // ---------------------- RENDER SCENE AFTER    SHADOW ---------------------------
+        // ----------------------------------------------------------------------------
+        {   
             glUseProgram(shaderProgram);
 
             glUniform1i(shadowMapUniform, 0); 
@@ -265,6 +272,7 @@ int vao = createCubeVAO();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             test1.draw();
             test1.move();
+        }
         //World rotation
         // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
             // * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
