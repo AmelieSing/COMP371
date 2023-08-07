@@ -2,7 +2,7 @@
 layout (location = 0) in vec3 position;
 
 uniform mat4 light_view_proj_matrix;
-uniform mat4 model_matrix;
+uniform mat4 worldMatrix;
 
 void main()
 {
@@ -12,5 +12,5 @@ void main()
                                     vec4(0.5, 0.5, 0.5, 1.0));
     gl_Position = 
 //                    scale_bias_matrix * // bias the depth map coordinates
-                    light_view_proj_matrix * model_matrix * vec4(position, 1.0);
+                    light_view_proj_matrix * worldMatrix * vec4(position, 1.0);
 }

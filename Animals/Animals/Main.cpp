@@ -22,16 +22,18 @@
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
+#include "animalBird.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "shaderloader.h"
 
 using namespace glm;
 using namespace std;
 
 bool initContext();
-
-int loadSHADER(string vertex_file_path, string fragment_file_path);
+int createCubeVAO();
+// int loadSHADER(string vertex_file_path, string fragment_file_path);
 
 GLuint loadTexture(const char* filename);
 
@@ -49,21 +51,29 @@ int main(int argc, char* argv[])
     if (!initContext()) return -1;
 
     //Loading Shaders
-    GLuint colorShader = loadSHADER("./Assets/Shaders/color_vertex.glsl", "./Assets/Shaders/color_fragment.glsl"); //Color shader is the basic shader used in lab03 and lab04
-    GLuint textureShader = loadSHADER("./Assets/Shaders/texture_vertex.glsl", "./Assets/Shaders/texture_fragment.glsl"); 
-    GLuint lightShader = loadSHADER("./Assets/Shaders/light_vertex.glsl", "./Assets/Shaders/light_fragment.glsl");
-    GLuint shaderShadow = loadSHADER("./Assets/Shaders/shadow_vertex.glsl", "./Assets/Shaders/shadow_fragment.glsl");
-   
-    //Loading Textures
-#if defined(PLATFORM_OSX)
-    GLuint brickTextureID = loadTexture("Assets/Textures/brick.jpg");
-#else
-    GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
-#endif
+    string shaderPathPrefix = "./Assets/mycoal_shaders/";
+    int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
+    int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
+    // GLuint colorShader = loadSHADER("./Assets/Shaders/color_vertex.glsl", "./Assets/Shaders/color_fragment.glsl"); //Color shader is the basic shader used in lab03 and lab04
+    // GLuint textureShader = loadSHADER("./Assets/Shaders/texture_vertex.glsl", "./Assets/Shaders/texture_fragment.glsl"); 
+    // GLuint lightShader = loadSHADER("./Assets/Shaders/light_vertex.glsl", "./Assets/Shaders/light_fragment.glsl");
+    // GLuint shaderShadow = loadSHADER("./Assets/Shaders/shadow_vertex.glsl", "./Assets/Shaders/shadow_fragment.glsl");
+   
+    // //Loading Textures
+    // #if defined(PLATFORM_OSX)
+    //     GLuint brickTextureID = loadTexture("Assets/Textures/brick.jpg");
+    //     GLuint defaultTextureID = loadTexture("assets/textures/white.png");
+
+    // #else
+    GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
+    GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+    // #endif
+
+    
     //Vector Array Objects
-    int vaColorCube = createVertexArrayCube();
-    int vaTexturedCube = createTexturedCubeVertexArrayObject();
+    // int vaColorCube = createVertexArrayCube();
+    // int vaTexturedCube = createTexturedCubeVertexArrayObject();
 
     // Background color
     float red = 56.0f/255.0f;
@@ -72,7 +82,7 @@ int main(int argc, char* argv[])
     glClearColor(red, blue, green, 1.0f);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(0.6f, 1.0f, 10.0f);
+    vec3 cameraPosition(0.6f, 10.0f, 50.0f);
     vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
@@ -81,6 +91,38 @@ int main(int argc, char* argv[])
     float cameraFastSpeed = 2 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
+
+const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
+        
+    // Variable storing index to texture used for shadow mapping
+    GLuint depth_map_texture;
+    // Get the texture
+    glGenTextures(1, &depth_map_texture);
+    // Bind the texture so the next glTex calls affect it
+    glBindTexture(GL_TEXTURE_2D, depth_map_texture);
+    // Create the texture and specify it's attributes, including widthn height, components (only depth is stored, no color information)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, DEPTH_MAP_TEXTURE_SIZE, DEPTH_MAP_TEXTURE_SIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                NULL);
+    // Set texture sampler parameters.
+    // The two calls below tell the texture sampler inside the shader how to upsample and downsample the texture. Here we choose the nearest filtering option, which means we just use the value of the closest pixel to the chosen image coordinate.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // The two calls below tell the texture sampler inside the shader how it should deal with texture coordinates outside of the [0, 1] range. Here we decide to just tile the image.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Variable storing index to framebuffer used for shadow mapping
+    GLuint depth_map_fbo;  // fbo: framebuffer object
+    // Get the framebuffer
+    glGenFramebuffers(1, &depth_map_fbo);
+    // Bind the framebuffer so the next glFramebuffer calls affect it
+    glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+    // Attach the depth map texture to the depth map framebuffer
+    //glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depth_map_texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_texture, 0);
+	glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Set projection matrix for shader
     float fov = 70.0f;
@@ -95,20 +137,45 @@ int main(int argc, char* argv[])
 
     // Set View and Projection matrices on all shaders
     // Color Shader
-    SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
-    SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
+    // SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
+    // SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
 
-    SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
-    SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
+    // SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
+    // SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
 
-    mat4 worldMatrix = mat4(1.0f);
+    SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
+    SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+
+    // mat4 worldMatrix = mat4(1.0f);
+int vao = createCubeVAO();
+    GLint shadowMapUniform = glGetUniformLocation(shaderProgram, "shadow_map");
+    glUniform1i(shadowMapUniform, 0); // Texture unit 1 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+    GLint texture1Uniform = glGetUniformLocation(shaderProgram, "textureSampler");
+    glUniform1i(texture1Uniform, 1); // Texture unit 1 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, brickTextureID);
+    glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+    // glActiveTexture(GL_TEXTURE3);
+    // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+    // glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
+
+    // glActiveTexture(GL_TEXTURE4);
+    // glBindTexture(GL_TEXTURE_2D, steelTextureID);
+    // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
+
+    Bird test1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
 
     //Color matrix
-    GLuint colorLocation = glGetUniformLocation(colorShader, "objectColor");
+    // GLuint colorLocation = glGetUniformLocation(colorShader, "objectColor");
 
     //Setting up world matrix location for geometry
-    GLuint colorWorldMatrixLocation = glGetUniformLocation(colorShader, "worldMatrix");
-    GLuint textureWorldMatrixLocation = glGetUniformLocation(textureShader, "worldMatrix");
+    // GLuint colorWorldMatrixLocation = glGetUniformLocation(colorShader, "worldMatrix");
+    // GLuint textureWorldMatrixLocation = glGetUniformLocation(textureShader, "worldMatrix");
 
     // For frame time
     float lastFrameTime = glfwGetTime();
@@ -138,59 +205,115 @@ int main(int argc, char* argv[])
 
 
 
-        // Frame time calculation
-        float dt = glfwGetTime() - lastFrameTime;
+            float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
 
+        // -------------- LIGHTING -----------------------------------
+        SetUniformVec3(shaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
+        vec3 lightPosition = vec3(0.0f,60.0f, 0.0f); // the location of the light in 3D space
+        // vec3(30.0f * sinf(glfwGetTime()), 30.0f, 30.0f * cosf(glfwGetTime()));
+
+        vec3 lightFocus = vec3(0.0, 0.0, 1.0);      // the point in 3D space the light "looks" at
+        vec3 lightDirection = normalize(lightFocus - lightPosition);
+
+        float lightNearPlane = 1.0f;
+        float lightFarPlane = 180.0f;
+
+        float lightAngleOuter = 30.0;
+        float lightAngleInner = 20.0;
+        // Set light cutoff angles on scene shader
+        SetUniform1Value(shaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
+        SetUniform1Value(shaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
+        
+        
+        mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
+        //perspective(20.0f, (float)DEPTH_MAP_TEXTURE_SIZE / (float)DEPTH_MAP_TEXTURE_SIZE, lightNearPlane, lightFarPlane);
+        mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
+        mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+        SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+        SetUniformMat4(shaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+
+        SetUniform1Value(shaderProgram, "light_near_plane", lightNearPlane);
+        SetUniform1Value(shaderProgram, "light_far_plane", lightFarPlane);
+        
+        SetUniformVec3(shaderProgram, "light_position", lightPosition);
+
+        SetUniformVec3(shaderProgram, "light_direction", lightDirection);
+
+        float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
+        GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
+
+            glUseProgram(shadowShaderProgram);
+            glViewport(0, 0, DEPTH_MAP_TEXTURE_SIZE, DEPTH_MAP_TEXTURE_SIZE);
+            // Bind depth map texture as output framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+            // Clear depth data on the framebuffer
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            test1.drawShadow();
+
+            glUseProgram(shaderProgram);
+
+            glUniform1i(shadowMapUniform, 0); 
+
+            int width, height;
+            glfwGetFramebufferSize(window, &width, &height);
+            glViewport(0, 0, width, height);
+            // Bind screen as output framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            // Clear color and depth data on framebuffer
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            test1.draw();
+            test1.move();
         //World rotation
-        glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
-            * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
+        // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
+            // * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
 
         /*Test Cubes*/
 
         // Each frame, reset color of each pixel to glClearColor
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //Texture Cube
         //Setting program shader
-        glUseProgram(textureShader);
+        // glUseProgram(textureShader);
 
         //Set up texture
-        glActiveTexture(GL_TEXTURE0);
-        GLuint textureLocation = glGetUniformLocation(textureShader, "textureSampler");
-        glBindTexture(GL_TEXTURE_2D, brickTextureID);
-        glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
+        // glActiveTexture(GL_TEXTURE0);
+        // GLuint textureLocation = glGetUniformLocation(textureShader, "textureSampler");
+        // glBindTexture(GL_TEXTURE_2D, brickTextureID);
+        // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
 
         //Setting up vaTexturedCube
-        glBindVertexArray(vaTexturedCube);
-        glBindBuffer(GL_ARRAY_BUFFER, vaTexturedCube);
+        // glBindVertexArray(vaTexturedCube);
+        // glBindBuffer(GL_ARRAY_BUFFER, vaTexturedCube);
 
         //Drawing Lower arm
-        mat4 textureCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(3.0f, 0.0f, 0.0f))
-            * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-        glUniformMatrix4fv(textureWorldMatrixLocation, 1, GL_FALSE, &textureCubeMatrix[0][0]);
-       // glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(0.9f, 0.8f, 0.6f)));
-        SetUniformMat4(textureShader, "worldMatrix", textureCubeMatrix);
-        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+    //     mat4 textureCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(3.0f, 0.0f, 0.0f))
+    //         * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+    //     glUniformMatrix4fv(textureWorldMatrixLocation, 1, GL_FALSE, &textureCubeMatrix[0][0]);
+    //    // glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(0.9f, 0.8f, 0.6f)));
+    //     SetUniformMat4(textureShader, "worldMatrix", textureCubeMatrix);
+    //     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
       
         //Color Cube
         //Setting program shader
-        glUseProgram(colorShader);
+        // glUseProgram(colorShader);
 
         //Setting up vaColorCube 
-        glBindVertexArray(vaColorCube);
-        glBindBuffer(GL_ARRAY_BUFFER, vaColorCube);
+        // glBindVertexArray(vaColorCube);
+        // glBindBuffer(GL_ARRAY_BUFFER, vaColorCube);
 
         //Drawing Color Cube
-        mat4 colorCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(-3.0f, 0.0f, 0.0f)) 
-            * scale(mat4(1.0f), vec3(1.0f,1.0f,1.0f));
-        glUniformMatrix4fv(colorWorldMatrixLocation, 1, GL_FALSE, &colorCubeMatrix[0][0]);
-        glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.0f)));
-        SetUniformMat4(colorShader, "worldMatrix", colorCubeMatrix);
-        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+        // mat4 colorCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(-3.0f, 0.0f, 0.0f)) 
+        //     * scale(mat4(1.0f), vec3(1.0f,1.0f,1.0f));
+        // glUniformMatrix4fv(colorWorldMatrixLocation, 1, GL_FALSE, &colorCubeMatrix[0][0]);
+        // glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.0f)));
+        // SetUniformMat4(colorShader, "worldMatrix", colorCubeMatrix);
+        // glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-        
+        // test1.draw();
         
  
         /*World functionalities*/
@@ -220,9 +343,6 @@ int main(int argc, char* argv[])
         {
             worldRy = worldRx = 0.0f;
         }
-
-
-
         glBindVertexArray(0);
 
         // End Frame
@@ -312,16 +432,20 @@ int main(int argc, char* argv[])
                 0.01f, 100.0f);   // near and far (near > 0)
 
             //Setting the new projection
-            SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
-            SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
-            SetUniformMat4(lightShader, "projection_matrix", projectionMatrix);
+            // SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
+            // SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
+            // SetUniformMat4(lightShader, "projection_matrix", projectionMatrix);
+            SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
+            
             lastMousePosY = mousePosY;
         }
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
-        SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
-        SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
-        SetUniformMat4(lightShader, "view_matrix", viewMatrix);
+        // SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
+        // SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
+        // SetUniformMat4(lightShader, "view_matrix", viewMatrix);
+        SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+
     }
 
     // Shutdown GLFW
@@ -366,140 +490,140 @@ bool initContext() {     // Initialize GLFW and OpenGL version
 }
 
 //Added functions to check the functionalities - Need to be properly stored in another file at some point
-void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value)
-{
-    glUseProgram(shader_id);
-    glUniformMatrix4fv(glGetUniformLocation(shader_id, uniform_name), 1, GL_FALSE, &uniform_value[0][0]);
-}
+// void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value)
+// {
+//     glUseProgram(shader_id);
+//     glUniformMatrix4fv(glGetUniformLocation(shader_id, uniform_name), 1, GL_FALSE, &uniform_value[0][0]);
+// }
 
-int loadSHADER(string vertex_file_path, string fragment_file_path) {
+// int loadSHADER(string vertex_file_path, string fragment_file_path) {
 
-    // Create the shaders
-    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+//     // Create the shaders
+//     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+//     GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
-    // Read the Vertex Shader code from the file
-    std::string VertexShaderCode;
-    std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-    if (VertexShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << VertexShaderStream.rdbuf();
-        VertexShaderCode = sstr.str();
-        VertexShaderStream.close();
-    }
-    else {
-        printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-        getchar();
-        return 0;
-    }
+//     // Read the Vertex Shader code from the file
+//     std::string VertexShaderCode;
+//     std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
+//     if (VertexShaderStream.is_open()) {
+//         std::stringstream sstr;
+//         sstr << VertexShaderStream.rdbuf();
+//         VertexShaderCode = sstr.str();
+//         VertexShaderStream.close();
+//     }
+//     else {
+//         printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
+//         getchar();
+//         return 0;
+//     }
 
-    // Read the Fragment Shader code from the file
-    std::string FragmentShaderCode;
-    std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-    if (FragmentShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << FragmentShaderStream.rdbuf();
-        FragmentShaderCode = sstr.str();
-        FragmentShaderStream.close();
-    }
+//     // Read the Fragment Shader code from the file
+//     std::string FragmentShaderCode;
+//     std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
+//     if (FragmentShaderStream.is_open()) {
+//         std::stringstream sstr;
+//         sstr << FragmentShaderStream.rdbuf();
+//         FragmentShaderCode = sstr.str();
+//         FragmentShaderStream.close();
+//     }
 
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
+//     GLint Result = GL_FALSE;
+//     int InfoLogLength;
 
-    // Compile Vertex Shader
-    cout << "Compiling shader : " << vertex_file_path << endl;
-    char const* VertexSourcePointer = VertexShaderCode.c_str();
-    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-    glCompileShader(VertexShaderID);
+//     // Compile Vertex Shader
+//     cout << "Compiling shader : " << vertex_file_path << endl;
+//     char const* VertexSourcePointer = VertexShaderCode.c_str();
+//     glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+//     glCompileShader(VertexShaderID);
 
-    // Check Vertex Shader
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-        printf("%s\n", &VertexShaderErrorMessage[0]);
-    }
+//     // Check Vertex Shader
+//     glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+//     glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//     if (InfoLogLength > 0) {
+//         std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+//         glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+//         printf("%s\n", &VertexShaderErrorMessage[0]);
+//     }
 
-    // Compile Fragment Shader
-    cout << "Compiling shader : " << fragment_file_path << endl;
-    char const* FragmentSourcePointer = FragmentShaderCode.c_str();
-    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-    glCompileShader(FragmentShaderID);
+//     // Compile Fragment Shader
+//     cout << "Compiling shader : " << fragment_file_path << endl;
+//     char const* FragmentSourcePointer = FragmentShaderCode.c_str();
+//     glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+//     glCompileShader(FragmentShaderID);
 
-    // Check Fragment Shader
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-        printf("%s\n", &FragmentShaderErrorMessage[0]);
-    }
+//     // Check Fragment Shader
+//     glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+//     glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//     if (InfoLogLength > 0) {
+//         std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+//         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+//         printf("%s\n", &FragmentShaderErrorMessage[0]);
+//     }
 
-    // Link the program
-    printf("Linking program\n");
-    GLuint ProgramID = glCreateProgram();
-    glAttachShader(ProgramID, VertexShaderID);
-    glAttachShader(ProgramID, FragmentShaderID);
-    glLinkProgram(ProgramID);
+//     // Link the program
+//     printf("Linking program\n");
+//     GLuint ProgramID = glCreateProgram();
+//     glAttachShader(ProgramID, VertexShaderID);
+//     glAttachShader(ProgramID, FragmentShaderID);
+//     glLinkProgram(ProgramID);
 
-    // Check the program
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        printf("%s\n", &ProgramErrorMessage[0]);
-    }
+//     // Check the program
+//     glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+//     glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//     if (InfoLogLength > 0) {
+//         std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+//         glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+//         printf("%s\n", &ProgramErrorMessage[0]);
+//     }
 
-    glDetachShader(ProgramID, VertexShaderID);
-    glDetachShader(ProgramID, FragmentShaderID);
+//     glDetachShader(ProgramID, VertexShaderID);
+//     glDetachShader(ProgramID, FragmentShaderID);
 
-    glDeleteShader(VertexShaderID);
-    glDeleteShader(FragmentShaderID);
+//     glDeleteShader(VertexShaderID);
+//     glDeleteShader(FragmentShaderID);
 
-    return ProgramID;
-}
+//     return ProgramID;
+// }
 
-GLuint loadTexture(const char* filename)
-{
-    // Step1 Create and bind textures
-    GLuint textureId = 0;
-    glGenTextures(1, &textureId);
-    assert(textureId != 0);
+// GLuint loadTexture(const char* filename)
+// {
+//     // Step1 Create and bind textures
+//     GLuint textureId = 0;
+//     glGenTextures(1, &textureId);
+//     assert(textureId != 0);
 
 
-    glBindTexture(GL_TEXTURE_2D, textureId);
+//     glBindTexture(GL_TEXTURE_2D, textureId);
 
-    // Step2 Set filter parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//     // Step2 Set filter parameters
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Step3 Load Textures with dimension data
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
-    if (!data)
-    {
-        std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
-        return 0;
-    }
+//     // Step3 Load Textures with dimension data
+//     int width, height, nrChannels;
+//     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
+//     if (!data)
+//     {
+//         std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
+//         return 0;
+//     }
 
-    // Step4 Upload the texture to the PU
-    GLenum format = 0;
-    if (nrChannels == 1)
-        format = GL_RED;
-    else if (nrChannels == 3)
-        format = GL_RGB;
-    else if (nrChannels == 4)
-        format = GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
-        0, format, GL_UNSIGNED_BYTE, data);
+//     // Step4 Upload the texture to the PU
+//     GLenum format = 0;
+//     if (nrChannels == 1)
+//         format = GL_RED;
+//     else if (nrChannels == 3)
+//         format = GL_RGB;
+//     else if (nrChannels == 4)
+//         format = GL_RGBA;
+//     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
+//         0, format, GL_UNSIGNED_BYTE, data);
 
-    // Step5 Free resources
-    stbi_image_free(data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return textureId;
-}
+//     // Step5 Free resources
+//     stbi_image_free(data);
+//     glBindTexture(GL_TEXTURE_2D, 0);
+//     return textureId;
+// }
 
 //To test that the file works - Need to be properly stored in another file at some point if they are to be re-used instead of 3D files
 // Cube model
@@ -696,3 +820,97 @@ int createTexturedCubeVertexArrayObject()
     return vertexArrayObject;
 }
 
+int createCubeVAO() {
+    // Cube model
+    const TexturedColoredVertex vertexArray[] = {  // position,                            normals
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)), // far - blue
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 5.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 5.0f))
+    };
+        
+    // Create a vertex array
+    GLuint vertexArrayObject;
+    glGenVertexArrays(1, &vertexArrayObject);
+    glBindVertexArray(vertexArrayObject);
+     
+    // Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
+    GLuint vertexBufferObject;
+    glGenBuffers(1, &vertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), vertexArray, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
+        3,                   // size
+        GL_FLOAT,            // type
+        GL_FALSE,            // normalized?
+        sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
+        (void*)0             // array buffer offset
+    );
+    glEnableVertexAttribArray(0);
+
+
+    glVertexAttribPointer(1,                            // attribute 1 matches aNormals in Vertex Shader
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
+    );
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)(2 * sizeof(vec3))      // uv is offseted by 2 vec3 (comes after position and color)
+    );
+    glEnableVertexAttribArray(2);
+
+    
+    return vertexBufferObject;
+}

@@ -71,7 +71,7 @@ class Bird {
          * translate(mat4(1.0f), bodyPosition) 
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
          * scale(mat4(1.0f), bodySize);
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -83,7 +83,7 @@ class Bird {
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
          * translate(mat4(1.0f), headPosition) 
          * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -95,7 +95,7 @@ class Bird {
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
          * translate(mat4(1.0f), wingsPositionL) 
          * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -107,7 +107,7 @@ class Bird {
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
          * translate(mat4(1.0f), wingsPositionR) 
          * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -119,7 +119,7 @@ class Bird {
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
          * translate(mat4(1.0f), legPositionL) 
          * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -131,7 +131,7 @@ class Bird {
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
          * translate(mat4(1.0f), legPositionR) 
          * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderShadowProgram, "model_matrix", modelMatrix);
+         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -139,6 +139,7 @@ class Bird {
       }
 
       void draw() {
+         glUseProgram(shaderProgram);
          // BODY
          modelMatrix = scale(mat4(1.0f), scaleFactor) 
          * translate(mat4(1.0f), bodyPosition) 
@@ -146,7 +147,7 @@ class Bird {
          * scale(mat4(1.0f), bodySize);
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -160,7 +161,7 @@ class Bird {
          * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 0.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -174,7 +175,7 @@ class Bird {
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -188,7 +189,7 @@ class Bird {
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -202,7 +203,7 @@ class Bird {
          * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -216,7 +217,7 @@ class Bird {
          * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
          SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
-         glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
          glBindVertexArray(vao);
          glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -249,8 +250,6 @@ class Bird {
 
       
 };
-
-
 
 // shader variable setters
 void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value) {
