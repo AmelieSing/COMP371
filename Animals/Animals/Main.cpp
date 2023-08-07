@@ -55,19 +55,10 @@ int main(int argc, char* argv[])
     int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
-    // GLuint colorShader = loadSHADER("./Assets/Shaders/color_vertex.glsl", "./Assets/Shaders/color_fragment.glsl"); //Color shader is the basic shader used in lab03 and lab04
-    // GLuint textureShader = loadSHADER("./Assets/Shaders/texture_vertex.glsl", "./Assets/Shaders/texture_fragment.glsl"); 
-    // GLuint lightShader = loadSHADER("./Assets/Shaders/light_vertex.glsl", "./Assets/Shaders/light_fragment.glsl");
-    // GLuint shaderShadow = loadSHADER("./Assets/Shaders/shadow_vertex.glsl", "./Assets/Shaders/shadow_fragment.glsl");
-   
-    // //Loading Textures
-    // #if defined(PLATFORM_OSX)
-    //     GLuint brickTextureID = loadTexture("Assets/Textures/brick.jpg");
-    //     GLuint defaultTextureID = loadTexture("assets/textures/white.png");
 
-    // #else
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+
     // #endif
 
     
@@ -161,14 +152,14 @@ int vao = createCubeVAO();
     glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
     // glActiveTexture(GL_TEXTURE3);
-    // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+    // glBindTexture(GL_TEXTURE_2D, tennistTextureID);
     // glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
 
     // glActiveTexture(GL_TEXTURE4);
     // glBindTexture(GL_TEXTURE_2D, steelTextureID);
     // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
 
-    Bird test1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
+    Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
 
     //Color matrix
     // GLuint colorLocation = glGetUniformLocation(colorShader, "objectColor");
@@ -202,10 +193,7 @@ int vao = createCubeVAO();
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {
-
-
-
-            float dt = glfwGetTime() - lastFrameTime;
+        float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
 
         // -------------- LIGHTING -----------------------------------
@@ -252,7 +240,16 @@ int vao = createCubeVAO();
             // Clear depth data on the framebuffer
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            test1.drawShadow();
+            mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
+                * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
+
+            SetUniformMat4(shadowShaderProgram, "worldMatrix", groundWorldMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            bird1.drawShadow();
         }
 
         // ----------------------------------------------------------------------------
@@ -260,7 +257,6 @@ int vao = createCubeVAO();
         // ----------------------------------------------------------------------------
         {   
             glUseProgram(shaderProgram);
-
             glUniform1i(shadowMapUniform, 0); 
 
             int width, height;
@@ -270,8 +266,22 @@ int vao = createCubeVAO();
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             // Clear color and depth data on framebuffer
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            test1.draw();
-            test1.move();
+        // -------------------------- CLAY GROUND ------------------------------
+            mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
+                * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
+            SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+        
+        // ------------------- 
+            bird1.draw();
+            bird1.move();
+
         }
         //World rotation
         // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
@@ -321,7 +331,7 @@ int vao = createCubeVAO();
         // SetUniformMat4(colorShader, "worldMatrix", colorCubeMatrix);
         // glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-        // test1.draw();
+        // bird1.draw();
         
  
         /*World functionalities*/
