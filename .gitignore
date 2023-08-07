@@ -1,5 +1,5 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/Animals/.vs/Animals/v16/Browse.VC.opendb
+﻿#ignore folders
+.vs/
+Animals/.vs/Animals/
+Animals/x64/Debug/
+x64/Debug/
