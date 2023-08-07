@@ -22,7 +22,9 @@
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
+
 #include "animalBird.cpp"
+// #include "functions.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -41,8 +43,6 @@ int createTexturedCubeVertexArrayObject();
 
 int createVertexArrayCube();
 
-void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value);
-
 GLFWwindow* window = NULL;
 
 int main(int argc, char* argv[])
@@ -55,16 +55,8 @@ int main(int argc, char* argv[])
     int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
-
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
-
-    // #endif
-
-    
-    //Vector Array Objects
-    // int vaColorCube = createVertexArrayCube();
-    // int vaTexturedCube = createTexturedCubeVertexArrayObject();
 
     // Background color
     float red = 56.0f/255.0f;
@@ -109,7 +101,6 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     // Bind the framebuffer so the next glFramebuffer calls affect it
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
     // Attach the depth map texture to the depth map framebuffer
-    //glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depth_map_texture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_texture, 0);
 	glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
 
@@ -126,19 +117,11 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         cameraPosition + cameraLookAt,  // center
         cameraUp); // up
 
-    // Set View and Projection matrices on all shaders
-    // Color Shader
-    // SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
-    // SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
-
-    // SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
-    // SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
-
     SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
     SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
     // mat4 worldMatrix = mat4(1.0f);
-int vao = createCubeVAO();
+    int vao = createCubeVAO();
     GLint shadowMapUniform = glGetUniformLocation(shaderProgram, "shadow_map");
     glUniform1i(shadowMapUniform, 0); // Texture unit 1 is now bound to texture1
 
@@ -161,23 +144,13 @@ int vao = createCubeVAO();
 
     Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
 
-    //Color matrix
-    // GLuint colorLocation = glGetUniformLocation(colorShader, "objectColor");
-
-    //Setting up world matrix location for geometry
-    // GLuint colorWorldMatrixLocation = glGetUniformLocation(colorShader, "worldMatrix");
-    // GLuint textureWorldMatrixLocation = glGetUniformLocation(textureShader, "worldMatrix");
-
     // For frame time
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
     double lastMousePosX, lastMousePosY;
     glfwGetCursorPos(window, &lastMousePosX, &lastMousePosY);
 
-    // Other OpenGL states to set once
-    // Enable Backface culling
     glEnable(GL_CULL_FACE);
-    // Enable Depth Test
     glEnable(GL_DEPTH_TEST);
 
     //World rotation angles
@@ -187,8 +160,6 @@ int vao = createCubeVAO();
     //Camera rotation angles
     float phi = 0; //vertical
     float theta = radians(90.0f); //horizontal
-
-
 
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
@@ -225,7 +196,6 @@ int vao = createCubeVAO();
         SetUniform1Value(shaderProgram, "light_far_plane", lightFarPlane);
         
         SetUniformVec3(shaderProgram, "light_position", lightPosition);
-
         SetUniformVec3(shaderProgram, "light_direction", lightDirection);
 
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
@@ -240,14 +210,7 @@ int vao = createCubeVAO();
             // Clear depth data on the framebuffer
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
-
-            SetUniformMat4(shadowShaderProgram, "worldMatrix", groundWorldMatrix);
-
-            glBindVertexArray(vao);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-            glBindVertexArray(0);
+            createFloorShadow(shadowShaderProgram, vao);
 
             bird1.drawShadow();
         }
@@ -267,74 +230,13 @@ int vao = createCubeVAO();
             // Clear color and depth data on framebuffer
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // -------------------------- CLAY GROUND ------------------------------
-            mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
-            SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
-            
-            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
-
-            glBindVertexArray(vao);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-            glBindVertexArray(0);
+            createFloor(shaderProgram, vao, texture1Uniform);
         
         // ------------------- 
             bird1.draw();
             bird1.move();
 
         }
-        //World rotation
-        // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
-            // * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
-
-        /*Test Cubes*/
-
-        // Each frame, reset color of each pixel to glClearColor
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        //Texture Cube
-        //Setting program shader
-        // glUseProgram(textureShader);
-
-        //Set up texture
-        // glActiveTexture(GL_TEXTURE0);
-        // GLuint textureLocation = glGetUniformLocation(textureShader, "textureSampler");
-        // glBindTexture(GL_TEXTURE_2D, brickTextureID);
-        // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
-
-
-        //Setting up vaTexturedCube
-        // glBindVertexArray(vaTexturedCube);
-        // glBindBuffer(GL_ARRAY_BUFFER, vaTexturedCube);
-
-        //Drawing Lower arm
-    //     mat4 textureCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(3.0f, 0.0f, 0.0f))
-    //         * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-    //     glUniformMatrix4fv(textureWorldMatrixLocation, 1, GL_FALSE, &textureCubeMatrix[0][0]);
-    //    // glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(0.9f, 0.8f, 0.6f)));
-    //     SetUniformMat4(textureShader, "worldMatrix", textureCubeMatrix);
-    //     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-      
-        //Color Cube
-        //Setting program shader
-        // glUseProgram(colorShader);
-
-        //Setting up vaColorCube 
-        // glBindVertexArray(vaColorCube);
-        // glBindBuffer(GL_ARRAY_BUFFER, vaColorCube);
-
-        //Drawing Color Cube
-        // mat4 colorCubeMatrix = worldMatrix * translate(mat4(1.0f), vec3(-3.0f, 0.0f, 0.0f)) 
-        //     * scale(mat4(1.0f), vec3(1.0f,1.0f,1.0f));
-        // glUniformMatrix4fv(colorWorldMatrixLocation, 1, GL_FALSE, &colorCubeMatrix[0][0]);
-        // glUniform3fv(colorLocation, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.0f)));
-        // SetUniformMat4(colorShader, "worldMatrix", colorCubeMatrix);
-        // glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-
-        // bird1.draw();
-        
- 
-        /*World functionalities*/
         
         //Rotate the world
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate left
