@@ -1,5 +1,0 @@
-#ignore folders
-.vs/
-Animals/.vs/Animals/
-Animals/x64/Debug/
-x64/Debug/
