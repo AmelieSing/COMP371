@@ -1,9 +1,0 @@
-﻿  Main.cpp
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\gameObject.h(37,53): warning C4244: '=': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(116,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(205,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(244,22): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(329,66): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(348,64): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(463,16): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-  Animals.vcxproj -> C:\Users\Charles Partous\source\repos\Animal Generator\Animals\x64\Debug\Animals.exe
