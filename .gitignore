@@ -1,6 +1,6 @@
 .vscode/
 
-﻿#ignore folders
+#ignore folders
 .vs/
 Animals/.vs/
 Animals/x64/
