@@ -9,7 +9,9 @@
 #include <iostream>
 #include <vector>
 
-struct transform {
+
+
+struct Transform {
 	glm::vec3 position = glm::vec3(0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 	glm::vec3 scale = glm::vec3(1.0f);
@@ -19,7 +21,7 @@ class gameObject
 {
 public:
 	gameObject();
-	struct transform getTransform();
+	struct Transform getTransform();
 	void drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, GLuint colourVectorLocation, GLuint textureLocation);
 	GLuint getVertCount() { return vertCount; };
 	GLuint getVAO() { return VAO; };
@@ -50,7 +52,7 @@ private:
 	GLuint textureID;
 	GLfloat textureScale = 1.0f;
 	GLuint VAO = NULL; //model data, 
-	transform transform{ glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(1.0f) };
+	Transform transform{ glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(1.0f) };
 	std::vector<gameObject*> childGameObjects;
 	void drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation);
 };
