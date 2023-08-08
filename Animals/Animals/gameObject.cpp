@@ -20,7 +20,7 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glm::mat4 worldMatrix = glm::translate(glm::mat4(1.0f), this->transform.position) *
 		glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[0]), glm::vec3(1.0f, 0.0f, 0.0f)) * //rotate x
@@ -31,7 +31,7 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
-	glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
+	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 	if (VAO != NULL)
 		glDrawArrays(drawMode, 0, this->vertCount);
 	for (int i = 0; i < childGameObjects.size(); i++)
@@ -112,7 +112,7 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 
 	glUseProgram(shaderProgram);
 	glBindVertexArray(this->VAO);
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, this->textureID);
 	glm::mat4 worldMatrix = glm::mat4(1.0f);
 	worldMatrix *= parentMatrix;
@@ -124,7 +124,7 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
-	glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
+	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 
 	if (VAO != NULL)
 		glDrawArrays(drawMode, 0, this->vertCount);
