@@ -1,6 +1,4 @@
-michael
 .vscode/tasks.json
-Animals/Animals/Main
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 
@@ -9,4 +7,3 @@ Animals/Animals/Main
 Animals/.vs/Animals/
 Animals/x64/Debug/
 x64/Debug/
- main
