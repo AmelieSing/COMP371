@@ -30,6 +30,8 @@
 #include "stb_image.h"
 #include "shaderloader.h"
 
+#include "gameObject.h"
+
 using namespace glm;
 using namespace std;
 
@@ -167,6 +169,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
 
+
         // -------------- LIGHTING -----------------------------------
         SetUniformVec3(shaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
         vec3 lightPosition = vec3(0.0f,60.0f, 0.0f); // the location of the light in 3D space
@@ -177,6 +180,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
         float lightNearPlane = 1.0f;
         float lightFarPlane = 180.0f;
+
 
         float lightAngleOuter = 30.0;
         float lightAngleInner = 20.0;
@@ -351,19 +355,13 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
                 1024.0f / 768.0f,  // aspect ratio
                 0.01f, 100.0f);   // near and far (near > 0)
 
-            //Setting the new projection
-            // SetUniformMat4(colorShader, "projectionMatrix", projectionMatrix);
-            // SetUniformMat4(textureShader, "projectionMatrix", projectionMatrix);
-            // SetUniformMat4(lightShader, "projection_matrix", projectionMatrix);
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
             
             lastMousePosY = mousePosY;
         }
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
-        // SetUniformMat4(colorShader, "viewMatrix", viewMatrix);
-        // SetUniformMat4(textureShader, "viewMatrix", viewMatrix);
-        // SetUniformMat4(lightShader, "view_matrix", viewMatrix);
+      
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
     }
@@ -408,142 +406,6 @@ bool initContext() {     // Initialize GLFW and OpenGL version
     }
     return true;
 }
-
-//Added functions to check the functionalities - Need to be properly stored in another file at some point
-// void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value)
-// {
-//     glUseProgram(shader_id);
-//     glUniformMatrix4fv(glGetUniformLocation(shader_id, uniform_name), 1, GL_FALSE, &uniform_value[0][0]);
-// }
-
-// int loadSHADER(string vertex_file_path, string fragment_file_path) {
-
-//     // Create the shaders
-//     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-//     GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-//     // Read the Vertex Shader code from the file
-//     std::string VertexShaderCode;
-//     std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-//     if (VertexShaderStream.is_open()) {
-//         std::stringstream sstr;
-//         sstr << VertexShaderStream.rdbuf();
-//         VertexShaderCode = sstr.str();
-//         VertexShaderStream.close();
-//     }
-//     else {
-//         printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-//         getchar();
-//         return 0;
-//     }
-
-//     // Read the Fragment Shader code from the file
-//     std::string FragmentShaderCode;
-//     std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-//     if (FragmentShaderStream.is_open()) {
-//         std::stringstream sstr;
-//         sstr << FragmentShaderStream.rdbuf();
-//         FragmentShaderCode = sstr.str();
-//         FragmentShaderStream.close();
-//     }
-
-//     GLint Result = GL_FALSE;
-//     int InfoLogLength;
-
-//     // Compile Vertex Shader
-//     cout << "Compiling shader : " << vertex_file_path << endl;
-//     char const* VertexSourcePointer = VertexShaderCode.c_str();
-//     glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-//     glCompileShader(VertexShaderID);
-
-//     // Check Vertex Shader
-//     glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-//     glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//     if (InfoLogLength > 0) {
-//         std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-//         glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-//         printf("%s\n", &VertexShaderErrorMessage[0]);
-//     }
-
-//     // Compile Fragment Shader
-//     cout << "Compiling shader : " << fragment_file_path << endl;
-//     char const* FragmentSourcePointer = FragmentShaderCode.c_str();
-//     glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-//     glCompileShader(FragmentShaderID);
-
-//     // Check Fragment Shader
-//     glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-//     glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//     if (InfoLogLength > 0) {
-//         std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-//         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-//         printf("%s\n", &FragmentShaderErrorMessage[0]);
-//     }
-
-//     // Link the program
-//     printf("Linking program\n");
-//     GLuint ProgramID = glCreateProgram();
-//     glAttachShader(ProgramID, VertexShaderID);
-//     glAttachShader(ProgramID, FragmentShaderID);
-//     glLinkProgram(ProgramID);
-
-//     // Check the program
-//     glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-//     glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//     if (InfoLogLength > 0) {
-//         std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-//         glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-//         printf("%s\n", &ProgramErrorMessage[0]);
-//     }
-
-//     glDetachShader(ProgramID, VertexShaderID);
-//     glDetachShader(ProgramID, FragmentShaderID);
-
-//     glDeleteShader(VertexShaderID);
-//     glDeleteShader(FragmentShaderID);
-
-//     return ProgramID;
-// }
-
-// GLuint loadTexture(const char* filename)
-// {
-//     // Step1 Create and bind textures
-//     GLuint textureId = 0;
-//     glGenTextures(1, &textureId);
-//     assert(textureId != 0);
-
-
-//     glBindTexture(GL_TEXTURE_2D, textureId);
-
-//     // Step2 Set filter parameters
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//     // Step3 Load Textures with dimension data
-//     int width, height, nrChannels;
-//     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
-//     if (!data)
-//     {
-//         std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
-//         return 0;
-//     }
-
-//     // Step4 Upload the texture to the PU
-//     GLenum format = 0;
-//     if (nrChannels == 1)
-//         format = GL_RED;
-//     else if (nrChannels == 3)
-//         format = GL_RGB;
-//     else if (nrChannels == 4)
-//         format = GL_RGBA;
-//     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
-//         0, format, GL_UNSIGNED_BYTE, data);
-
-//     // Step5 Free resources
-//     stbi_image_free(data);
-//     glBindTexture(GL_TEXTURE_2D, 0);
-//     return textureId;
-// }
 
 //To test that the file works - Need to be properly stored in another file at some point if they are to be re-used instead of 3D files
 // Cube model

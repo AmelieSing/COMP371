@@ -1,0 +1,2 @@
+C:/Users/Charles Partous/source/repos/Animal Generator/External Resources/glm/glm/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+C:/Users/Charles Partous/source/repos/Animal Generator/External Resources/glm/glm/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
