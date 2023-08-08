@@ -1,9 +1,7 @@
-.vscode/tasks.json
-.vscode/c_cpp_properties.json
-.vscode/settings.json
+.vscode/
 
 ﻿#ignore folders
 .vs/
-Animals/.vs/Animals/
-Animals/x64/Debug/
-x64/Debug/
+Animals/.vs/
+Animals/x64/
+x64/
