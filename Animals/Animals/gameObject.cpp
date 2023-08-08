@@ -10,9 +10,9 @@ gameObject::gameObject()
 	this->textureID = 0;
 }
 
-transform gameObject::getTransform()
+Transform gameObject::getTransform()
 {
-	return transform;
+	return this->transform;
 }
 
 void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, GLuint colourVectorLocation, GLuint textureLocation)

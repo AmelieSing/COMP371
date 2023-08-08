@@ -163,6 +163,16 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     float phi = 0; //vertical
     float theta = radians(90.0f); //horizontal
 
+    gameObject wokidooAnimal;
+    gameObject leftHip_joint;
+    gameObject rightHip_joint;
+    gameObject neck_joint;
+    gameObject leftShoulder_joint;
+    gameObject rightShoulder_joint;
+    {
+
+    }
+
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {

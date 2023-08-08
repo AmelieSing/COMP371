@@ -1,9 +1,24 @@
-﻿  Main.cpp
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\gameObject.h(37,53): warning C4244: '=': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(116,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(205,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(244,22): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(329,66): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(348,64): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(463,16): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+﻿  gameObject.cpp
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\gameObject.h(39,53): warning C4244: '=': conversion from 'int' to 'GLfloat', possible loss of data
+  Main.cpp
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\shaderloader.h(25,10): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\gameObject.h(39,53): warning C4244: '=': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(150,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(179,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(311,66): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(330,64): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\functions.cpp(31,62): warning C4244: 'argument': conversion from 'T' to 'GLint', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\Charles Partous\source\repos\Animal Generator\Animals\Animals\Main.cpp(198): message : see reference to function template instantiation 'void SetUniform1Value<float>(GLuint,const char *,T)' being compiled
+          with
+          [
+              T=float
+          ]
+  Generating Code...
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB '' was not found with 'glew32s.lib(glew.obj)' or at ''; linking object as if no debug info
   Animals.vcxproj -> C:\Users\Charles Partous\source\repos\Animal Generator\Animals\x64\Debug\Animals.exe
