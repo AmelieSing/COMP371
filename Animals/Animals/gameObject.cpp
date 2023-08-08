@@ -30,6 +30,7 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
+	
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 	if (VAO != NULL)
@@ -41,6 +42,31 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &glm::mat4(1.0f)[0][0]);
 	glUniform3f(colourVectorLocation, glm::vec3(1.0f)[0], glm::vec3(1.0f)[1], glm::vec3(1.0f)[2]);
+	glBindVertexArray(0);
+}
+
+void gameObject::drawModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation) {
+	
+	glUseProgram(shaderProgram);
+	glBindVertexArray(VAO);
+
+	glm::mat4 worldMatrix = glm::translate(glm::mat4(1.0f), this->transform.position) *
+		glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[0]), glm::vec3(1.0f, 0.0f, 0.0f)) * //rotate x
+		glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[1]), glm::vec3(0.0f, 1.0f, 0.0f)) * //rotate y
+		glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[2]), glm::vec3(0.0f, 0.0f, 1.0f)) * //rotate z 
+		glm::scale(glm::mat4(1.0f), this->transform.scale); //scale
+
+
+	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
+
+	if (VAO != NULL)
+		glDrawArrays(drawMode, 0, this->vertCount);
+	for (int i = 0; i < childGameObjects.size(); i++)
+	{
+		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
+	}
+
+	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &glm::mat4(1.0f)[0][0]);
 	glBindVertexArray(0);
 }
 
@@ -109,7 +135,6 @@ void gameObject::removeChildObject(int index)
 
 void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation)
 {
-
 	glUseProgram(shaderProgram);
 	glBindVertexArray(this->VAO);
 	glActiveTexture(GL_TEXTURE1);
@@ -123,6 +148,7 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 	worldMatrix *= glm::scale(glm::mat4(1.0f), this->transform.scale);
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
+
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 
@@ -135,5 +161,30 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &glm::mat4(1.0f)[0][0]);
 	glUniform3f(colourVectorLocation, glm::vec3(1.0f)[0], glm::vec3(1.0f)[1], glm::vec3(1.0f)[2]);
+	glBindVertexArray(0);
+}
+
+void gameObject::drawChildModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix) {
+	
+	glUseProgram(shaderProgram);
+	glBindVertexArray(this->VAO);
+
+	glm::mat4 worldMatrix = glm::mat4(1.0f);
+	worldMatrix *= parentMatrix;
+	worldMatrix *= glm::translate(glm::mat4(1.0f), this->transform.position);
+	worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[0]), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate x
+	worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[1]), glm::vec3(0.0f, 1.0f, 0.0f)); //rotate y
+	worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[2]), glm::vec3(0.0f, 0.0f, 1.0f)); //rotate z
+	worldMatrix *= glm::scale(glm::mat4(1.0f), this->transform.scale);
+
+	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
+
+	if (VAO != NULL)
+		glDrawArrays(drawMode, 0, this->vertCount);
+	for (int i = 0; i < childGameObjects.size(); i++)
+	{
+		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
+	}
+
 	glBindVertexArray(0);
 }
