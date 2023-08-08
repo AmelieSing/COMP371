@@ -1,12 +1,13 @@
-michael
+#michael
 .vscode/tasks.json
 Animals/Animals/Main
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 
-﻿#ignore folders
+#ignore folders
 .vs/
-Animals/.vs/Animals/
+Animals/.vs/
 Animals/x64/Debug/
 x64/Debug/
- main
+
+
