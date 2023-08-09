@@ -103,12 +103,12 @@ int main(int argc, char* argv[])
     //change skybox image here
     vector<std::string> faces
     {
-        "./Assets/skybox/aback.jpg",
-            "./Assets/skybox/abottom.jpg",
+        "./Assets/skybox/aright.jpg", //ok
+            "./Assets/skybox/afront.jpg",//ok
             "./Assets/skybox/atop.jpg",
-            "./Assets/skybox/aleft.jpg",
-            "./Assets/skybox/aright.jpg",
-            "./Assets/skybox/afront.jpg"
+            "./Assets/skybox/abottom.jpg",
+            "./Assets/skybox/aback.jpg",
+            "./Assets/skybox/aleft.jpg"
     };
 
     GLuint cubemapTexture = loadCubemap(faces);
