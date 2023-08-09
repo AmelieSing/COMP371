@@ -473,7 +473,8 @@ int main(int argc, char* argv[])
             NPC2.draw();
             // NPC2.move();
             NPC2.rotateSelf();
-
+            cameraMan.updateGravity(dt);
+            cameraMan.updatePos(dt);
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
@@ -604,9 +605,10 @@ int main(int argc, char* argv[])
             lastMousePosY = mousePosY;
         }
         // -------------------------- CAMERA MOVEMENTS ------------------------------------------
+        // cameraPosition = cameraMan.getHeadPosition();
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
-            cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
-            cameraMan.controlMove(cameraPosition);
+            // cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
+            cameraMan.controlMove(cameraPosition, dt);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
             cameraPosition += cameraSideVector * currentCameraSpeed * dt;
@@ -621,14 +623,16 @@ int main(int argc, char* argv[])
            cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
-           cameraPosition += cameraUp * (currentCameraSpeed / 2) * dt;
-           cameraMan.controlMove(cameraPosition);
+        //    cameraPosition += cameraUp * (currentCameraSpeed / 2) * dt;
+        //    cameraMan.controlMove(cameraPosition);
+        cameraMan.charJump();
+        cameraPosition = cameraMan.getHeadPosition();
+
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
            cameraPosition -= cameraUp * (currentCameraSpeed / 2) * dt;
            cameraMan.controlMove(cameraPosition);
         }
-
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
@@ -638,7 +642,7 @@ int main(int argc, char* argv[])
 
     // Shutdown GLFW
     glfwTerminate();
-
+    cout << cameraHorizontalAngle << endl;
     return 0;
 }
 

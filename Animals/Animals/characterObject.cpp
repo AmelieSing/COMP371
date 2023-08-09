@@ -312,9 +312,30 @@ public:
    void setBodyAngle(float cameraHorizontalAngle) {
       bodyAngleY = cameraHorizontalAngle + 90.0f;
    }
-
    void controlMove(vec3 cameraPosition) {
+      // mVelocity += velocity * dt
       headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
+   }
+   void controlMove(vec3 velocity, float dt) {
+      mVelocity += velocity * dt;
+      // headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
+   }
+   void charJump() {
+      mVelocity = vec3(0.0f, 20.0f, 0.0f);
+   }
+   void updatePos(float dt) {
+      if(headPosition.y <= height) {
+         mVelocity = vec3(0.0f, 0.0f, 0.0f);
+         return;
+      }
+      headPosition += dt * mVelocity;
+   }
+   void updateGravity(float dt) {
+      mVelocity += dt * vec3(0.0f, -1.0f * gravity, 0.0f);
+   }
+
+   vec3 getHeadPosition() {
+      return headPosition;
    }
 
 private:
@@ -335,6 +356,9 @@ private:
    vec3 legPositionR;
 
    vec3 scaleFactor = vec3(1.0f, 1.0f, 1.0f);
+
+   vec3 mVelocity = vec3(0.0f, 0.0f, 0.0f);
+   float gravity = 9.81;
 
    float bodyAngleY = 0;
    float armsAngle = 0;
