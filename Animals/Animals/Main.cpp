@@ -48,6 +48,41 @@ void handleInputs();
 
 GLFWwindow* window = NULL;
 
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
+
 int main(int argc, char* argv[])
 {
     // Initialize GLFW and OpenGL version
@@ -60,6 +95,84 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+
+    //skybox shader
+    GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
+        "./Assets/skybox/skyboxfs.glsl");
+
+    //change skybox image here
+    vector<std::string> faces
+    {
+        "./Assets/skybox/aback.jpg",
+            "./Assets/skybox/abottom.jpg",
+            "./Assets/skybox/atop.jpg",
+            "./Assets/skybox/aleft.jpg",
+            "./Assets/skybox/aright.jpg",
+            "./Assets/skybox/afront.jpg"
+    };
+
+    GLuint cubemapTexture = loadCubemap(faces);
+
+    float skyboxVertices[] = {
+    // positions
+    -50.0f,  50.0f, -50.0f,
+    -50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+
+    -50.0f, -50.0f,  50.0f,
+    -50.0f, -50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f,  50.0f,
+    -50.0f, -50.0f,  50.0f,
+
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+
+    -50.0f, -50.0f,  50.0f,
+    -50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f, -50.0f,  50.0f,
+    -50.0f, -50.0f,  50.0f,
+
+    -50.0f,  50.0f, -50.0f,
+     50.0f,  50.0f, -50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+    -50.0f,  50.0f,  50.0f,
+    -50.0f,  50.0f, -50.0f,
+
+    -50.0f, -50.0f, -50.0f,
+    -50.0f, -50.0f,  50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+    -50.0f, -50.0f,  50.0f,
+     50.0f, -50.0f,  50.0f
+};
+
+    // skybox VAO
+    GLuint skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    
+    
+    //Vector Array Objects
+    // int vaColorCube = createVertexArrayCube();
+    // int vaTexturedCube = createTexturedCubeVertexArrayObject();
 
     // Background color
     float red = 56.0f/255.0f;
@@ -78,7 +191,7 @@ int main(int argc, char* argv[])
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
 
-const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
+    const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         
     // Variable storing index to texture used for shadow mapping
     GLuint depth_map_texture;
@@ -105,7 +218,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
     // Attach the depth map texture to the depth map framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_texture, 0);
-	glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
+	//glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -136,6 +249,13 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, brickTextureID);
     glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
+
+    std::cout << cubemapTexture;
+
 
     // glActiveTexture(GL_TEXTURE3);
     // glBindTexture(GL_TEXTURE_2D, tennistTextureID);
@@ -296,6 +416,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
+
+
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -315,6 +437,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             bird2.drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
+
+
 
         // ----------------------------------------------------------------------------
         // ---------------------- RENDER SCENE AFTER SHADOW ---------------------------
@@ -354,6 +478,27 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
 
         }
+
+
+        //skybox
+        glDepthFunc(GL_LEQUAL);
+        glUseProgram(skyboxShader);
+        SetUniformMat4(skyboxShader, "view", lookAt(cameraPosition, cameraLookAt, cameraUp));
+        SetUniformMat4(skyboxShader, "projection", projectionMatrix);
+
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0);
+        glDepthFunc(GL_LESS);
+        
+
+
+        //World rotation
+        // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
+            // * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
 
         wokidooAnimalRotate += 0.01;
         
