@@ -147,7 +147,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
     Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
     Bird bird2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f));
-    characterObject cameraMan1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
+    characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
     characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
     characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
     
@@ -307,7 +307,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
             createFloorShadow(shadowShaderProgram, vao);
 
-            cameraMan1.drawShadow();
+            cameraMan.drawShadow();
             NPC1.drawShadow();
             NPC2.drawShadow();
 
@@ -340,8 +340,9 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             bird1.moveWings();
             bird2.draw();
             bird2.moveWings();
-            cameraMan1.draw();
-            
+            cameraMan.draw();
+            cameraMan.setBodyAngle(cameraHorizontalAngle);
+            cameraMan.moveAnimation();
             NPC1.draw();
             NPC1.moveAnimation();
             NPC1.move();
@@ -418,7 +419,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
 
         // Clamp vertical angle to [-85, 85] degrees
-        cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
+        cameraVerticalAngle = std::max(-65.0f, std::min(85.0f, cameraVerticalAngle));
 
         float theta = radians(cameraHorizontalAngle);
         float phi = radians(cameraVerticalAngle);
@@ -461,21 +462,27 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         // -------------------------- CAMERA MOVEMENTS ------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
             cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
+            cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
             cameraPosition += cameraSideVector * currentCameraSpeed * dt;
+            cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {  // move camera backward
            cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
+           cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {    // move camera forward
            cameraPosition += cameraLookAt * currentCameraSpeed * dt;
+           cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
            cameraPosition += cameraUp * (currentCameraSpeed / 2) * dt;
+           cameraMan.controlMove(cameraPosition);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
            cameraPosition -= cameraUp * (currentCameraSpeed / 2) * dt;
+           cameraMan.controlMove(cameraPosition);
         }
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);

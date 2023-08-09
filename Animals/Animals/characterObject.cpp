@@ -33,7 +33,7 @@ public:
 
       bodySize = vec3(2.5f * headSize.x,
          3.2f * headSize.y,
-         1.2 * headSize.z
+         0.8 * headSize.z
       );
       bodyPosition = vec3(0.0f,
          -1.0f * ((bodySize.y * 0.5f) + (headSize.y * 0.5f)),
@@ -73,12 +73,12 @@ public:
       this->shaderShadowProgram = shaderShadowProgram;
       this->height = cameraPosition.y;
 
-      headPosition = cameraPosition;
       headSize = vec3(0.1f * height, 0.125f * height, 0.1f * height);
+      headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
 
       bodySize = vec3(2.5f * headSize.x,
          3.0f * headSize.y,
-         1.2 * headSize.z
+         0.8 * headSize.z
       );
       bodyPosition = vec3(0.0f,
          -1.0f * ((bodySize.y * 0.5f) + (headSize.y * 0.5f)),
@@ -219,9 +219,9 @@ public:
       // ARMS L
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
+         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * rotate(mat4(1.0f), radians(legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * translate(mat4(1.0f), armPositionL)
          * scale(mat4(1.0f), armSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -235,9 +235,9 @@ public:
       // ARMS R
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
+         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * rotate(mat4(1.0f), radians(-1.0f * armsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * translate(mat4(1.0f), armPositionR)
          * scale(mat4(1.0f), armSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -251,9 +251,9 @@ public:
       // LEGS L
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
+         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * rotate(mat4(1.0f), radians(-1.0f * legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * translate(mat4(1.0f), legPositionL)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -267,9 +267,9 @@ public:
       // LEGS R
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
+         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * rotate(mat4(1.0f), radians(legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * translate(mat4(1.0f), legPositionR)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -280,10 +280,8 @@ public:
       glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
       glBindVertexArray(0);
 
-
    }
    void moveAnimation() {
-      // headPosition += vec3(0.05f * cos(radians(bodyAngleY)), 0.0f, -0.05f * sin(radians(bodyAngleY)));
       if(legsAngle == -25) {
          legsUp = true;
       } else if(legsAngle == 25) {
@@ -309,10 +307,14 @@ public:
       headPosition += vec3(0.0f, 0.0f, -0.01f);
    }
    void rotateSelf() {
-      bodyAngleY += 1.0f;
+      bodyAngleY++;
    }
-   void controlMove(vec3 movement) {
+   void setBodyAngle(float cameraHorizontalAngle) {
+      bodyAngleY = cameraHorizontalAngle + 90.0f;
+   }
 
+   void controlMove(vec3 cameraPosition) {
+      headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
    }
 
 private:
