@@ -130,7 +130,116 @@ void gameObject::addChildObject(gameObject* t_object)
 
 void gameObject::removeChildObject(int index)
 {
-	childGameObjects.erase(childGameObjects.begin() + index);
+	gameObject* temp = (childGameObjects.at(index));
+	childGameObjects.erase(childGameObjects.begin()+index);
+	if (temp->getChildArray().size() > 0)
+	{
+		for (int i = temp->getChildArray().size() - 1; i >= 0; i--)
+		{
+			delete temp->getChildObject(i);
+		}
+	}
+	
+}
+
+void gameObject::generateAnimal(gameObject& animal, gameObject& neck_joint, gameObject& leftHip_joint, gameObject& rightHip_joint, gameObject& leftShoulder_joint, gameObject& rightShoulder_joint)
+{
+	//generate a seed
+	std::time_t t;
+	std::srand((unsigned)std::time(&t));
+
+	//Remove and delete all old data
+	for (int i = animal.getChildArray().size()-1; i >= 0 ; i--)
+	{
+		animal.removeChildObject(i);
+	}
+	for (int i = neck_joint.getChildArray().size() - 1; i >= 0; i--)
+	{
+		neck_joint.removeChildObject(i);
+	}
+	for (int i = leftHip_joint.getChildArray().size() - 1; i >= 0; i--)
+	{
+		leftHip_joint.removeChildObject(i);
+	}
+	for (int i = rightHip_joint.getChildArray().size() - 1; i >= 0; i--)
+	{
+		rightHip_joint.removeChildObject(i);
+	}
+	for (int i = leftShoulder_joint.getChildArray().size() - 1; i >= 0; i--)
+	{
+		leftShoulder_joint.removeChildObject(i);
+	}
+	for (int i = rightShoulder_joint.getChildArray().size() - 1; i >= 0; i--)
+	{
+		rightShoulder_joint.removeChildObject(i);
+	}
+
+	//Set 'animal' as parent to all children 
+	animal.addChildObject(&leftHip_joint);
+	animal.addChildObject(&rightHip_joint);
+	animal.addChildObject(&neck_joint);
+	animal.addChildObject(&leftShoulder_joint);
+	animal.addChildObject(&rightShoulder_joint);
+
+	//Generate body shape values
+	float xbody = std::rand() % 6 + 3;
+	float ybody = std::rand() % 6 + 2;
+	float zbody = std::rand() % 6 + 4;
+	gameObject* mainBody = new gameObject;
+	animal.addChildObject(mainBody);
+	mainBody->setTransformScale(xbody, ybody, zbody);
+	mainBody->setVAO(this->VAO);
+	mainBody->setVertCount(this->vertCount);
+	mainBody->setTexture(this->textureID);
+
+	//generate arm values
+	float xArms = std::rand() % 6 + 3;
+	float yArms = std::rand() % 1 + 1;
+	float zArms = std::rand() % (int)(zbody)+1;
+	gameObject* leftArm = new gameObject;
+	gameObject* rightArm = new gameObject;
+	leftArm->setVAO(this->VAO);
+	rightArm->setVAO(this->VAO);
+	leftArm->setVertCount(this->vertCount);
+	rightArm->setVertCount(this->vertCount);
+	leftArm->setTexture(this->textureID);
+	rightArm->setTexture(this->textureID);
+	leftShoulder_joint.addChildObject(leftArm);
+	rightShoulder_joint.addChildObject(rightArm);
+	leftArm->setTransformScale(xArms, yArms, zArms);
+	rightArm->setTransformScale(xArms, yArms, zArms);
+	leftArm->setTransformPosition(-xArms / 2, 0, 0);
+	rightArm->setTransformPosition(xArms / 2, 0, 0);
+
+	//generate posiiton for shoulders
+	float xShoulder = xbody / 2;
+	float yShoulder = std::rand() % (int)(ybody) + (-ybody/2+yArms);
+	float zShoulder = std::rand() % (int)(zbody + (-zArms/2)) + ((-zbody/2)+(zArms/2));
+	leftShoulder_joint.setTransformPosition(-xShoulder, yShoulder, zShoulder);
+	rightShoulder_joint.setTransformPosition(xShoulder, yShoulder, zShoulder);
+
+	//generate leg values
+	float xLegs = std::rand() % 2 + 0.75;
+	float yLegs = std::rand() % 5 + 2;
+	float zLegs = xLegs;
+	gameObject* leftLeg = new gameObject;
+	gameObject* rightLeg = new gameObject;
+	leftLeg->setVAO(this->VAO);
+	rightLeg->setVAO(this->VAO);
+	leftLeg->setVertCount(this->vertCount);
+	rightLeg->setVertCount(this->vertCount);
+	leftLeg->setTexture(this->textureID);
+	rightLeg->setTexture(this->textureID);
+	leftHip_joint.addChildObject(leftLeg);
+	rightHip_joint.addChildObject(rightLeg);
+	leftLeg->setTransformScale(xLegs, yLegs, zLegs);
+	rightLeg->setTransformScale(xLegs, yLegs, zLegs);
+	leftLeg->setTransformPosition(0, -yLegs/2, 0);
+	rightLeg->setTransformPosition(0, -yLegs/2, 0);
+
+	leftHip_joint.setTransformPosition(-xbody/2+xLegs/2,-ybody/2,0);
+	rightHip_joint.setTransformPosition(xbody/2-xLegs/2,-ybody/2,0);
+
 }
 
 void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation)

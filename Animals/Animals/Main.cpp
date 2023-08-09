@@ -170,8 +170,10 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     gameObject neck_joint;
     gameObject leftShoulder_joint;
     gameObject rightShoulder_joint;
-    wokidooAnimal.setTransformPosition(0.0f, 6.0f, 0.0f);
     float wokidooAnimalRotate = 0.0f;
+
+    /*
+    wokidooAnimal.setTransformPosition(0.0f, 6.0f, 0.0f);
     {
         wokidooAnimal.addChildObject(&leftHip_joint);
         wokidooAnimal.addChildObject(&rightHip_joint);
@@ -243,12 +245,18 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         head.setVertCount(36);
         head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
         head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
-
     }
-    gameObject wokidooAnimalPivot;
-    wokidooAnimalPivot.addChildObject(&wokidooAnimal);
-    wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
-    wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+    */
+    //gameObject wokidooAnimalPivot;
+    //wokidooAnimalPivot.addChildObject(&wokidooAnimal);
+    //wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
+    //wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+    gameObject parentVAO;
+    parentVAO.setVAO(vao);
+    parentVAO.setTexture(defaultTextureID);
+    parentVAO.setVertCount(36);
+    parentVAO.generateAnimal(wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+    wokidooAnimal.setTransformPosition(0.0f, 4.0f, 0.0f);
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {
@@ -303,7 +311,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             createFloorShadow(shadowShaderProgram, vao);
 
             bird1.drawShadow();
-            wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            wokidooAnimal.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            //wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
 
         // ----------------------------------------------------------------------------
@@ -326,14 +335,15 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         // ------------------- 
             bird1.draw();
             bird1.move();
-            wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-           
+            //wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+            wokidooAnimal.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
         }
 
         wokidooAnimalRotate += 0.01;
         
-        wokidooAnimalPivot.setTransformRotation(0.0f,-100*wokidooAnimalRotate,0.0f);
+        //wokidooAnimalPivot.setTransformRotation(0.0f,-100*wokidooAnimalRotate,0.0f);
+        wokidooAnimal.setTransformRotation(0, 80 * std::sin(wokidooAnimalRotate), 0);
         leftHip_joint.setTransformRotation(glm::vec3(45 * std::sin(wokidooAnimalRotate * 10), 0.0f, 0.0f));
         rightHip_joint.setTransformRotation(glm::vec3(-45 * std::sin(wokidooAnimalRotate * 10), 0.0f, 0.0f));
         leftShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, -30 * std::sin(wokidooAnimalRotate * 15)));
@@ -364,6 +374,10 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         if (glfwGetKey(window, GLFW_KEY_HOME) == GLFW_PRESS) //  remove rotation
         {
             worldRy = worldRx = 0.0f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // generate animal
+        {
+            parentVAO.generateAnimal(wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
         }
         glBindVertexArray(0);
 
