@@ -24,6 +24,7 @@
 #include <glm/common.hpp>
 
 #include "animalBird.cpp"
+#include "characterObject.cpp"
 // #include "functions.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -41,9 +42,9 @@ int createCubeVAO();
 
 GLuint loadTexture(const char* filename);
 
-int createTexturedCubeVertexArrayObject();
-
-int createVertexArrayCube();
+//int createTexturedCubeVertexArrayObject();
+int createVertexArrayCube(); 
+void handleInputs();
 
 GLFWwindow* window = NULL;
 
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
     // Other camera parameters
-    float cameraSpeed = 1.0f;
+    float cameraSpeed = 10.0f;
     float cameraFastSpeed = 2 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
@@ -145,7 +146,11 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
 
     Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
-
+    Bird bird2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f));
+    characterObject cameraMan1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
+    characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
+    characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
+    
     // For frame time
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
@@ -302,12 +307,17 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
             createFloorShadow(shadowShaderProgram, vao);
 
+            cameraMan1.drawShadow();
+            NPC1.drawShadow();
+            NPC2.drawShadow();
+
             bird1.drawShadow();
+            bird2.drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
 
         // ----------------------------------------------------------------------------
-        // ---------------------- RENDER SCENE AFTER    SHADOW ---------------------------
+        // ---------------------- RENDER SCENE AFTER SHADOW ---------------------------
         // ----------------------------------------------------------------------------
         {   
             glUseProgram(shaderProgram);
@@ -324,10 +334,23 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             createFloor(shaderProgram, vao, texture1Uniform);
         
         // ------------------- 
+
             bird1.draw();
             bird1.move();
+            bird1.moveWings();
+            bird2.draw();
+            bird2.moveWings();
+            cameraMan1.draw();
+            
+            NPC1.draw();
+            NPC1.moveAnimation();
+            NPC1.move();
+            NPC2.draw();
+            // NPC2.move();
+            NPC2.rotateSelf();
+
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-           
+
 
         }
 
@@ -371,15 +394,15 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // Handle inputs
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
-
-        //Camera Speed
-        bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-        float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
-
-        //Mouse movements
+        // ------------------------------------------------------------------------------------
+        // ------------------------------ Handle inputs ---------------------------------------
+        // ------------------------------------------------------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+           glfwSetWindowShouldClose(window, true);
+        }
+        // ------------------------------------------------------------------------------------
+        
+        // -------------------------- MOUSE MOVEMENTS ------------------------------------------
         double mousePosX, mousePosY;
         glfwGetCursorPos(window, &mousePosX, &mousePosY);
 
@@ -390,45 +413,24 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         lastMousePosY = mousePosY;
 
         // Convert to spherical coordinates
-        const float cameraAngularSpeed = 60.0f;
+        const float cameraAngularSpeed = 20.0f;
+        cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
+        cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
 
+        // Clamp vertical angle to [-85, 85] degrees
+        cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
 
-        //X tilt of camera
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-        {
-            cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-
-            if (cameraHorizontalAngle > 360)
-            {
-                cameraHorizontalAngle -= 360;
-            }
-            else if (cameraHorizontalAngle < -360)
-            {
-                cameraHorizontalAngle += 360;
-            }
-
-            theta = radians(cameraHorizontalAngle);
-
-
-        }
-        //Y tilt of camera
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
-        {
-
-            cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
-
-            // Clamp vertical angle to [-85, 85] degrees
-            cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
-
-            phi = radians(cameraVerticalAngle);
-
-        }
+        float theta = radians(cameraHorizontalAngle);
+        float phi = radians(cameraVerticalAngle);
 
         cameraLookAt = vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
 
         glm::normalize(cameraSideVector);
-
+        // ------------------------------------------------------------------------------------
+        //Camera Speed
+        bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+        float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
         //Zoom in and out
         float zoomSpeed = 0.01f;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -448,7 +450,6 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             if (fov > 90.0) {
                 fov = 90.0f;
             }
-
             projectionMatrix = perspective(fov, // field of view in degrees
                 1024.0f / 768.0f,  // aspect ratio
                 0.01f, 100.0f);   // near and far (near > 0)
@@ -456,6 +457,25 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
             
             lastMousePosY = mousePosY;
+        }
+        // -------------------------- CAMERA MOVEMENTS ------------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
+            cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
+            cameraPosition += cameraSideVector * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {  // move camera backward
+           cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {    // move camera forward
+           cameraPosition += cameraLookAt * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
+           cameraPosition += cameraUp * (currentCameraSpeed / 2) * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
+           cameraPosition -= cameraUp * (currentCameraSpeed / 2) * dt;
         }
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
