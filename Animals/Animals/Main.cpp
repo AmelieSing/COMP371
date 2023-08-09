@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     glClearColor(red, blue, green, 1.0f);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(0.6f, 10.0f, 50.0f);
+    vec3 cameraPosition(0.6f, 30.0f, 50.0f);
     vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
@@ -190,6 +190,8 @@ int main(int argc, char* argv[])
     float cameraFastSpeed = 2 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
+
+    bool spacePressed = false;
 
     const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         
@@ -473,8 +475,7 @@ int main(int argc, char* argv[])
             NPC2.draw();
             // NPC2.move();
             NPC2.rotateSelf();
-            cameraMan.updateGravity(dt);
-            cameraMan.updatePos(dt);
+            // cameraMan.updatePos(dt);
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
@@ -570,7 +571,9 @@ int main(int argc, char* argv[])
         float phi = radians(cameraVerticalAngle);
 
         cameraLookAt = vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
+        vec3 frontVector = vec3(cosf(theta), 0.0f, -1.0f * sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
+        vec3 cameraSideVector2 = glm::cross(frontVector, vec3(0.0f, 1.0f, 0.0f));
 
         glm::normalize(cameraSideVector);
         // ------------------------------------------------------------------------------------
@@ -605,34 +608,36 @@ int main(int argc, char* argv[])
             lastMousePosY = mousePosY;
         }
         // -------------------------- CAMERA MOVEMENTS ------------------------------------------
-        // cameraPosition = cameraMan.getHeadPosition();
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
-            // cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
-            cameraMan.controlMove(cameraPosition, dt);
+            cameraMan.controlMove(-1.0f * cameraSideVector2 * currentCameraSpeed, dt);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
-            cameraPosition += cameraSideVector * currentCameraSpeed * dt;
-            cameraMan.controlMove(cameraPosition);
+            cameraMan.controlMove(1.0f * cameraSideVector2 * currentCameraSpeed, dt);
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {  // move camera backward
-           cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
-           cameraMan.controlMove(cameraPosition);
+            cameraMan.controlMove(-1.0f * frontVector * currentCameraSpeed, dt);
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {    // move camera forward
-           cameraPosition += cameraLookAt * currentCameraSpeed * dt;
-           cameraMan.controlMove(cameraPosition);
+            cameraMan.controlMove(1.0f * frontVector * currentCameraSpeed, dt);
         }
+
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
-        //    cameraPosition += cameraUp * (currentCameraSpeed / 2) * dt;
-        //    cameraMan.controlMove(cameraPosition);
-        cameraMan.charJump();
+            if (!spacePressed && cameraMan.getOnGround()) {
+                cameraMan.charJump();
+                spacePressed = true;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) { // move camera up
+            spacePressed = false;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
+        }
+
+        cameraMan.updatePos(dt);
+
         cameraPosition = cameraMan.getHeadPosition();
 
-        }
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
-           cameraPosition -= cameraUp * (currentCameraSpeed / 2) * dt;
-           cameraMan.controlMove(cameraPosition);
-        }
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
@@ -651,7 +656,7 @@ bool initContext() {     // Initialize GLFW and OpenGL version
     glfwInit();
 
 #if defined(PLATFORM_OSX)
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
