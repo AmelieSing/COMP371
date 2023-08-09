@@ -303,6 +303,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             createFloorShadow(shadowShaderProgram, vao);
 
             bird1.drawShadow();
+            wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
 
         // ----------------------------------------------------------------------------

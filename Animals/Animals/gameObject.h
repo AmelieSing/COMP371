@@ -23,6 +23,7 @@ public:
 	gameObject();
 	struct Transform getTransform();
 	void drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, GLuint colourVectorLocation, GLuint textureLocation);
+	void drawModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation);
 	GLuint getVertCount() { return vertCount; };
 	GLuint getVAO() { return VAO; };
 	void setVertCount(int num) { vertCount = num; };
@@ -55,4 +56,5 @@ private:
 	Transform transform{ glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(1.0f) };
 	std::vector<gameObject*> childGameObjects;
 	void drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation);
+	void drawChildModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix);
 };
