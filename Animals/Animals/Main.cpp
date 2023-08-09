@@ -483,7 +483,6 @@ int main(int argc, char* argv[])
         //skybox
         glDepthFunc(GL_LEQUAL);
         glUseProgram(skyboxShader);
-        SetUniformMat4(skyboxShader, "view", lookAt(cameraPosition, cameraLookAt, cameraUp));
         SetUniformMat4(skyboxShader, "projection", projectionMatrix);
 
         glBindVertexArray(skyboxVAO);
@@ -631,7 +630,8 @@ int main(int argc, char* argv[])
         }
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
-      
+
+        SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
     }
