@@ -71,7 +71,7 @@ public:
       this->vao = vao;
       this->texture1Uniform = texture1Uniform;
       this->shaderShadowProgram = shaderShadowProgram;
-      this->height = cameraPosition.y;
+      this->height = 10.0f;
 
       headSize = vec3(0.1f * height, 0.125f * height, 0.1f * height);
       headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
@@ -312,9 +312,50 @@ public:
    void setBodyAngle(float cameraHorizontalAngle) {
       bodyAngleY = cameraHorizontalAngle + 90.0f;
    }
-
    void controlMove(vec3 cameraPosition) {
+      // mVelocity += velocity * dt
       headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
+   }
+   void controlMove(vec3 velocity, float dt) {
+      mVelocity += velocity * dt;
+      // headPosition = cameraPosition - vec3(0.0f, headSize.y * 0.45f, 0.0f);
+   }
+   void charJump() {
+      headPosition = vec3(headPosition.x, headPosition.y + 0.1f, headPosition.z);
+      mVelocity = vec3(mVelocity.x, 20.0f, mVelocity.z);
+      onGround = false;
+   }
+   void updatePos(float dt) {
+      if(headPosition.y <= height) {
+         if(mVelocity.y!=0)
+            mVelocity = vec3(mVelocity.x, 0.0f, mVelocity.z);
+            onGround = true;
+      } else {
+         updateGravity(dt);
+      }
+      airResistance(dt);
+      headPosition += dt * mVelocity;
+   }
+   void updateGravity(float dt) {
+      mVelocity += dt * vec3(0.0f, -1.0f * gravity, 0.0f);
+   }
+   void airResistance(float dt) {
+      if(mVelocity.x > 0) {
+         mVelocity.x -= 0.1f;
+      } else if(mVelocity.x < 0) {
+         mVelocity.x += 0.1f;
+      }
+      if(mVelocity.z > 0) {
+         mVelocity.z -= 0.1f;
+      } else if(mVelocity.z < 0) {
+         mVelocity.z += 0.1f;
+      }
+   }
+   vec3 getHeadPosition() {
+      return headPosition;
+   }
+   bool getOnGround() {
+      return onGround;
    }
 
 private:
@@ -336,11 +377,16 @@ private:
 
    vec3 scaleFactor = vec3(1.0f, 1.0f, 1.0f);
 
+   vec3 mVelocity = vec3(0.0f, 0.0f, 0.0f);
+   float gravity = 9.81;
+
    float bodyAngleY = 0;
    float armsAngle = 0;
    bool armsUp = false;
    float legsAngle = 0;
    bool legsUp = false;
+
+   bool onGround = false;
 
    mat4 modelMatrix;
    int vao;

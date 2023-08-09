@@ -33,8 +33,8 @@ void SetUniform1Value(GLuint shader_id, const char* uniform_name, T uniform_valu
 }
 
 void createFloorShadow(int shadowShaderProgram, int vao) {
-   mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
+   mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f)) 
+                * scale(mat4(1.0f), vec3(100.0f, 0.5f, 100.0f));
 
    SetUniformMat4(shadowShaderProgram, "worldMatrix", groundWorldMatrix);
 
@@ -42,9 +42,10 @@ void createFloorShadow(int shadowShaderProgram, int vao) {
    glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
    glBindVertexArray(0);
 }
+
 void createFloor(int shaderProgram, int vao, GLint texture1Uniform) {
    mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 0.1f, 100.0f));
+                * scale(mat4(1.0f), vec3(100.0f, 0.5f, 100.0f));
    SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
    SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
    
