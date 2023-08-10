@@ -140,6 +140,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameObject.h" />
+    <ClInclude Include="OBJloader.h" />
+    <ClInclude Include="OBJloaderV2.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

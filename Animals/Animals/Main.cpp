@@ -12,6 +12,8 @@
 #include <sstream>
 #include <streambuf>
 
+#include <stdlib.h>
+
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
 
@@ -32,6 +34,9 @@
 #include "shaderloader.h"
 
 #include "gameObject.h"
+
+#include "OBJloader.h" 
+#include "OBJloaderV2.h"
 
 using namespace glm;
 using namespace std;
@@ -82,6 +87,133 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 }
 
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+    int k1, k2;
+    for (int i = 0; i <= slices; i++) {
+        k1 = i * (stacks + 1);
+        k2 = k1 + stacks + 1;
+        for (int j = 0; j <= stacks; j++, k1++, k2++) {
+            vec3 v;
+            float theta = 2.0f * 3.14f * j / slices;
+            float phi = 3.14f * i / stacks;
+            v.x = radius * cos(theta) * sin(phi);
+            v.y = radius * sin(theta) * sin(phi);
+            v.z = radius * cos(phi);
+            vertices.push_back(v);
+            vec3 n(v.x / radius, v.y / radius, v.z / radius);
+            normals.push_back(n);
+            vec2 m;
+            m.x = (float)j / (float)slices;
+            m.y = (float)i / (float)stacks;
+            UV.push_back(m);
+
+            if (i != 0) {
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
+            }
+
+            // k1+1 => k2 => k2+1
+            if (i != (slices - 1)) {
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
+            }
+        }
+    }
+}
+
+GLuint setupModelVBO(string path, int& vertexCount) {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> UVs;
+
+    // read the vertex data from the model's OBJ file
+    loadOBJ(path.c_str(), vertices, normals, UVs);
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);  // Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and
+    // attribute pointer(s).
+
+    // Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+        &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    // Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3),
+        &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+
+    // UVs VBO setup
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(),
+        GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent
+    // strange bugs, as we are using multiple VAOs)
+    vertexCount = vertices.size();
+    return VAO;
+}
+
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices) {
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO); //Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+    //Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    //Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    //UVs VBO setupdra
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    //EBO setup
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+    vertexCount = vertexIndices.size();
+    return VAO;
+}
 
 int main(int argc, char* argv[])
 {
@@ -99,6 +231,13 @@ int main(int argc, char* argv[])
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
         "./Assets/skybox/skyboxfs.glsl");
+
+    //string spherePath = "./Assets/Models/sphere.obj";
+
+    //int sphereVertices;
+    //GLuint sphereVAO = setupModelVBO(spherePath, sphereVertices);
+
+    
 
     //change skybox image here
     vector<std::string> faces
@@ -259,6 +398,16 @@ int main(int argc, char* argv[])
     std::cout << cubemapTexture;
 
 
+    vector<int> vertexIndices;
+    //The contiguous sets of three indices of vertices, normals and UVs, used to make a triangle
+    vector<glm::vec3> vertices;
+    vector<glm::vec3> normals;
+    vector<glm::vec2> UVs;
+    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
+    int sphere2Vertices;
+    GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
+
+
     // glActiveTexture(GL_TEXTURE3);
     // glBindTexture(GL_TEXTURE_2D, tennistTextureID);
     // glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
@@ -371,6 +520,7 @@ int main(int argc, char* argv[])
         head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
         head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
 
+
     }
     gameObject wokidooAnimalPivot;
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
@@ -479,8 +629,18 @@ int main(int argc, char* argv[])
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
+           
+
+
         }
 
+        //BALL SAMPLE DISPLAY
+        glBindVertexArray(sphere2VAO);
+        glUseProgram(shaderProgram);
+        /*glDrawArrays(GL_TRIANGLES, 0, sphere2Vertices);*/
+        glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        
 
         //skybox
         glDepthFunc(GL_LEQUAL);

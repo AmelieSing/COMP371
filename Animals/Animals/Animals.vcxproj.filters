@@ -29,5 +29,11 @@
     <ClInclude Include="gameObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OBJloader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OBJloaderV2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
