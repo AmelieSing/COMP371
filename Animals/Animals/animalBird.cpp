@@ -34,6 +34,13 @@ class Bird {
          wingsPositionR = vec3(  bodySize.x/4, 
                                  bodySize.y/2, 
                                  1.0f * wingsSize.z/2);
+         legPositionL = vec3( -3 * bodySize.x / 7,
+                              -1 * bodySize.y / 2,
+                              -1.0f * bodySize.z / 3);
+         legPositionR = vec3( -3 * bodySize.x / 7,
+                              -1 * bodySize.y / 2,
+                              1.0f * bodySize.z / 3);
+         modelMatrix = mat4(1.0f);
       }
       Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos   ) {
          this->shaderProgram = shaderProgram;
@@ -48,7 +55,7 @@ class Bird {
                               bodyPosition.z);
          wingsSize = vec3( bodySize.x/3, 
                            bodySize.y/5, 
-                           bodySize.x);
+                           bodySize.x * 0.9f);
          wingsPositionL = vec3(  bodySize.x/5, 
                                  bodySize.y/2, 
                                  -1.0f * wingsSize.z/2);
@@ -61,6 +68,7 @@ class Bird {
          legPositionR = vec3( -3 * bodySize.x/7, 
                               -1 * bodySize.y/2, 
                               1.0f * bodySize.z/3);
+         modelMatrix = mat4(1.0f);
       }
       void drawShadow() {
          // BODY
@@ -90,6 +98,7 @@ class Bird {
          modelMatrix = scale(mat4(1.0f), scaleFactor) 
          * translate(mat4(1.0f), bodyPosition)
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+         * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), wingsPositionL) 
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
@@ -102,6 +111,7 @@ class Bird {
          modelMatrix = scale(mat4(1.0f), scaleFactor) 
          * translate(mat4(1.0f), bodyPosition)
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+         * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), wingsPositionR) 
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
@@ -168,6 +178,7 @@ class Bird {
          modelMatrix = scale(mat4(1.0f), scaleFactor) 
          * translate(mat4(1.0f), bodyPosition)
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+         * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), wingsPositionL) 
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -182,6 +193,7 @@ class Bird {
          modelMatrix = scale(mat4(1.0f), scaleFactor) 
          * translate(mat4(1.0f), bodyPosition)
          * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+         * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), wingsPositionR) 
          * scale(mat4(1.0f), wingsSize);
          SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -224,6 +236,20 @@ class Bird {
          bodyPosition += vec3(0.05f * cos(radians(yaw)), 0.0f, -0.05f * sin(radians(yaw)));
          yaw += 1.0f;
       }
+      void moveWings() {
+          if (wingsAngle == -10) {
+              wingsUp = true;
+          }
+          else if (wingsAngle == 45) {
+              wingsUp = false;
+          }
+          if (wingsUp) {
+              wingsAngle++;
+          }
+          else {
+              wingsAngle--;
+          }
+      }
    private:
       vec3 bodyPosition;
       vec3 bodySize;
@@ -235,6 +261,8 @@ class Bird {
       vec3 legPositionR;
       vec3 scaleFactor = vec3(3.0f, 3.0f, 3.0f);
 
+      float wingsAngle = 45;
+      bool wingsUp = false;
       float yaw = 0;
       float pitch = 0;
       float roll = 0;
@@ -244,6 +272,4 @@ class Bird {
       int shaderProgram;
       int shaderShadowProgram;
       GLint texture1Uniform;
-
-      
 };

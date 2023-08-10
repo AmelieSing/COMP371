@@ -12,6 +12,8 @@
 #include <sstream>
 #include <streambuf>
 
+#include <stdlib.h>
+
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
 
@@ -24,6 +26,7 @@
 #include <glm/common.hpp>
 
 #include "animalBird.cpp"
+#include "characterObject.cpp"
 // #include "functions.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -32,6 +35,9 @@
 
 #include "gameObject.h"
 #include "animalGenerators.h"
+
+#include "OBJloader.h" 
+#include "OBJloaderV2.h"
 
 using namespace glm;
 using namespace std;
@@ -42,11 +48,207 @@ int createCubeVAO();
 
 GLuint loadTexture(const char* filename);
 
-int createTexturedCubeVertexArrayObject();
-
-int createVertexArrayCube();
+//int createTexturedCubeVertexArrayObject();
+int createVertexArrayCube(); 
+void handleInputs();
 
 GLFWwindow* window = NULL;
+
+
+const char* vertexShaderSource = R"(
+    #version 330 core
+    layout(location = 0) in vec2 aPos;
+    layout(location = 1) in vec2 aTexCoord;
+
+    out vec2 TexCoord;
+    uniform mat4 model;
+
+    void main()
+    {
+        gl_Position =model * vec4(aPos.x, aPos.y, 0.0, 1.0);
+        TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y); // Flip the texture vertically
+    }
+)";
+
+const char* fragmentShaderSource = R"(
+    #version 330 core
+    in vec2 TexCoord;
+    out vec4 FragColor;
+
+    uniform sampler2D ourTexture;
+
+    void main()
+    {
+        vec4 texColor = texture(ourTexture, TexCoord);
+        
+        if (texColor.a < 1.0)
+        {
+            FragColor = mix(FragColor, vec4(0.0, 0.0, 0.0, 0.0), 1.0 - texColor.a);
+        }
+        FragColor = texColor; 
+    }
+)";
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+    int k1, k2;
+    for (int i = 0; i <= slices; i++) {
+        k1 = i * (stacks + 1);
+        k2 = k1 + stacks + 1;
+        for (int j = 0; j <= stacks; j++, k1++, k2++) {
+            vec3 v;
+            float theta = 2.0f * 3.14f * j / slices;
+            float phi = 3.14f * i / stacks;
+            v.x = radius * cos(theta) * sin(phi);
+            v.y = radius * sin(theta) * sin(phi);
+            v.z = radius * cos(phi);
+            vertices.push_back(v);
+            vec3 n(v.x / radius, v.y / radius, v.z / radius);
+            normals.push_back(n);
+            vec2 m;
+            m.x = (float)j / (float)slices;
+            m.y = (float)i / (float)stacks;
+            UV.push_back(m);
+
+            if (i != 0) {
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
+            }
+
+            // k1+1 => k2 => k2+1
+            if (i != (slices - 1)) {
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
+            }
+        }
+    }
+}
+
+GLuint setupModelVBO(string path, int& vertexCount) {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> UVs;
+
+    // read the vertex data from the model's OBJ file
+    loadOBJ(path.c_str(), vertices, normals, UVs);
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);  // Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and
+    // attribute pointer(s).
+
+    // Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+        &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    // Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3),
+        &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+
+    // UVs VBO setup
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(),
+        GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent
+    // strange bugs, as we are using multiple VAOs)
+    vertexCount = vertices.size();
+    return VAO;
+}
+
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices) {
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO); //Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+    //Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    //Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    //UVs VBO setupdra
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    //EBO setup
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+    vertexCount = vertexIndices.size();
+    return VAO;
+}
 
 int main(int argc, char* argv[])
 {
@@ -61,6 +263,92 @@ int main(int argc, char* argv[])
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
 
+    //skybox shader
+    GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
+        "./Assets/skybox/skyboxfs.glsl");
+
+    GLuint titleTextureID = loadTexture("./Assets/Textures/titled.png");
+
+
+    //string spherePath = "./Assets/Models/sphere.obj";
+
+    //int sphereVertices;
+    //GLuint sphereVAO = setupModelVBO(spherePath, sphereVertices);
+
+    
+
+    //change skybox image here
+    vector<std::string> faces
+    {
+        "./Assets/skybox/aright.jpg", //ok
+            "./Assets/skybox/afront.jpg",//ok
+            "./Assets/skybox/atop.jpg",
+            "./Assets/skybox/abottom.jpg",
+            "./Assets/skybox/aback.jpg",
+            "./Assets/skybox/aleft.jpg"
+    };
+
+    GLuint cubemapTexture = loadCubemap(faces);
+
+    float skyboxVertices[] = {
+    // positions
+    -50.0f,  50.0f, -50.0f,
+    -50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+
+    -50.0f, -50.0f,  50.0f,
+    -50.0f, -50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f, -50.0f,
+    -50.0f,  50.0f,  50.0f,
+    -50.0f, -50.0f,  50.0f,
+
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+
+    -50.0f, -50.0f,  50.0f,
+    -50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f, -50.0f,  50.0f,
+    -50.0f, -50.0f,  50.0f,
+
+    -50.0f,  50.0f, -50.0f,
+     50.0f,  50.0f, -50.0f,
+     50.0f,  50.0f,  50.0f,
+     50.0f,  50.0f,  50.0f,
+    -50.0f,  50.0f,  50.0f,
+    -50.0f,  50.0f, -50.0f,
+
+    -50.0f, -50.0f, -50.0f,
+    -50.0f, -50.0f,  50.0f,
+     50.0f, -50.0f, -50.0f,
+     50.0f, -50.0f, -50.0f,
+    -50.0f, -50.0f,  50.0f,
+     50.0f, -50.0f,  50.0f
+};
+
+    // skybox VAO
+    GLuint skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    
+    //Vector Array Objects
+    // int vaColorCube = createVertexArrayCube();
+    // int vaTexturedCube = createTexturedCubeVertexArrayObject();
+
     // Background color
     float red = 56.0f/255.0f;
     float blue =  89.0f/255.0f;
@@ -68,17 +356,19 @@ int main(int argc, char* argv[])
     glClearColor(red, blue, green, 1.0f);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(0.6f, 10.0f, 50.0f);
+    vec3 cameraPosition(0.6f, 30.0f, 50.0f);
     vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
     // Other camera parameters
-    float cameraSpeed = 1.0f;
+    float cameraSpeed = 10.0f;
     float cameraFastSpeed = 2 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
 
-const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
+    bool spacePressed = false;
+
+    const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         
     // Variable storing index to texture used for shadow mapping
     GLuint depth_map_texture;
@@ -105,7 +395,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
     // Attach the depth map texture to the depth map framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_texture, 0);
-	glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
+	//glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -137,6 +427,23 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     glBindTexture(GL_TEXTURE_2D, brickTextureID);
     glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
+
+    std::cout << cubemapTexture;
+
+
+    vector<int> vertexIndices;
+    //The contiguous sets of three indices of vertices, normals and UVs, used to make a triangle
+    vector<glm::vec3> vertices;
+    vector<glm::vec3> normals;
+    vector<glm::vec2> UVs;
+    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
+    int sphere2Vertices;
+    GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
+
+
     // glActiveTexture(GL_TEXTURE3);
     // glBindTexture(GL_TEXTURE_2D, tennistTextureID);
     // glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
@@ -146,7 +453,11 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
 
     Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
-
+    Bird bird2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f));
+    characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
+    characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
+    characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
+    
     // For frame time
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
@@ -174,7 +485,139 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     float wokidooAnimalRotate = 0.0f;
     generateAnimal(vao,36,defaultTextureID,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
 
+        //MAIN BODY
+        gameObject mainBody;
+        wokidooAnimal.addChildObject(&mainBody);
+        mainBody.setVAO(vao);
+        mainBody.setTexture(defaultTextureID);
+        mainBody.setVertCount(36);
+        mainBody.setTransformScale(glm::vec3(4.0f,4.0f,5.0f));
+        mainBody.setTransformPosition(0.0f, 0.0f, 1.0f);
+        mainBody.setColourVector(glm::vec3(1.0f, 0.0f, 0.0f));
+        
+        gameObject tail;
+        wokidooAnimal.addChildObject(&tail);
+        tail.setVAO(vao);
+        tail.setTexture(defaultTextureID);
+        tail.setVertCount(36);
+        tail.setTransformScale(0.6f, 2.0f, 4.0f);
+        tail.setTransformPosition(0.0f, 1.0f, -2.2f);
+        tail.setTransformRotation(45.0f, 0.0f, 0.0f);
+
+        gameObject leftWing;
+        leftShoulder_joint.addChildObject(&leftWing);
+        leftWing.setVAO(vao);
+        leftWing.setTexture(defaultTextureID);
+        leftWing.setVertCount(36);
+        leftWing.setTransformScale(glm::vec3(4.0f,1.0f,2.0f));
+        leftWing.setTransformPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+
+        gameObject rightWing;
+        rightShoulder_joint.addChildObject(&rightWing);
+        rightWing.setVAO(vao);
+        rightWing.setTexture(defaultTextureID);
+        rightWing.setVertCount(36);
+        rightWing.setTransformScale(glm::vec3(4.0f, 1.0f, 2.0f));
+        rightWing.setTransformPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
+
+        gameObject leftLeg;
+        leftHip_joint.addChildObject(&leftLeg);
+        leftLeg.setVAO(vao);
+        leftLeg.setTexture(defaultTextureID);
+        leftLeg.setVertCount(36);
+        leftLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
+        leftLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+
+        gameObject rightLeg;
+        rightHip_joint.addChildObject(&rightLeg);
+        rightLeg.setVAO(vao);
+        rightLeg.setTexture(defaultTextureID);
+        rightLeg.setVertCount(36);
+        rightLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
+        rightLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+
+        gameObject head;
+        neck_joint.addChildObject(&head);
+        head.setVAO(vao);
+        head.setTexture(defaultTextureID);
+        head.setVertCount(36);
+        head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
+        head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
+
+
+    }
+    gameObject wokidooAnimalPivot;
+    wokidooAnimalPivot.addChildObject(&wokidooAnimal);
+    wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
+    wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
     // Entering Main Loop
+
+    //plane
+    float planevertices[] = {
+        // Positions       // Texture Coords
+        -0.5f, -0.5f,     0.0f, 0.0f,
+         0.5f, -0.5f,     1.0f, 0.0f,
+         0.5f,  0.5f,     1.0f, 1.0f,
+        -0.5f,  0.5f,     0.0f, 1.0f,
+    };
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planevertices), planevertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Specify vertex attributes
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("./Assets/Textures/brick.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        GLenum format = nrChannels == 3 ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture!" << std::endl;
+    }
+    stbi_image_free(data);
+
+    GLuint vertexShader, fragmentShader, planeshaderProgram;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+    glCompileShader(vertexShader);
+
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+    glCompileShader(fragmentShader);
+
+    planeshaderProgram = glCreateProgram();
+    glAttachShader(planeshaderProgram, vertexShader);
+    glAttachShader(planeshaderProgram, fragmentShader);
+    glLinkProgram(planeshaderProgram);
+
+    
+    
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -216,6 +659,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
+
+        
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -227,13 +672,19 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
             createFloorShadow(shadowShaderProgram, vao);
 
+            cameraMan.drawShadow();
+            NPC1.drawShadow();
+            NPC2.drawShadow();
+
             bird1.drawShadow();
-            wokidooAnimal.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
-            //wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            bird2.drawShadow();
+            wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
 
+
+
         // ----------------------------------------------------------------------------
-        // ---------------------- RENDER SCENE AFTER    SHADOW ---------------------------
+        // ---------------------- RENDER SCENE AFTER SHADOW ---------------------------
         // ----------------------------------------------------------------------------
         {   
             glUseProgram(shaderProgram);
@@ -250,11 +701,74 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             createFloor(shaderProgram, vao, texture1Uniform);
         
         // ------------------- 
+
             bird1.draw();
             bird1.move();
-            wokidooAnimal.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-       
+            bird1.moveWings();
+            bird2.draw();
+            bird2.moveWings();
+            cameraMan.draw();
+            cameraMan.setBodyAngle(cameraHorizontalAngle);
+            cameraMan.moveAnimation();
+            NPC1.draw();
+            NPC1.moveAnimation();
+            NPC1.move();
+            NPC2.draw();
+            // NPC2.move();
+            NPC2.rotateSelf();
+            // cameraMan.updatePos(dt);
+            wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+
+
         }
+
+        //BALL SAMPLE DISPLAY
+        glBindVertexArray(sphere2VAO);
+        glUseProgram(shaderProgram);
+        /*glDrawArrays(GL_TRIANGLES, 0, sphere2Vertices);*/
+        glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        
+
+        //skybox
+        glDepthFunc(GL_LEQUAL);
+        glUseProgram(skyboxShader);
+        SetUniformMat4(skyboxShader, "projection", projectionMatrix);
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0);
+        glDepthFunc(GL_LESS);
+
+        //plane sample display
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUseProgram(planeshaderProgram);
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, titleTextureID);
+        GLuint textureLocation = glGetUniformLocation(planeshaderProgram, "ourTexture");
+        glUniform1i(textureLocation, 5); // Use texture unit 5
+        glm::mat4 model = glm::mat4(1.0f);
+        model = translate(mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+
+        // Get the location of the "model" uniform in the shader
+        GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
+
+        // Pass the model matrix to the shader
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+        
+
+
+        //World rotation
+        // glm::mat4 worldMatrix = rotate(mat4(1.0f), radians(worldRy), glm::vec3(0.0f, 1.0f, 0.0f))
+            // * rotate(mat4(1.0f), radians(worldRx), glm::vec3(1.0f, 0.0f, 0.0f));
 
         wokidooAnimalRotate += 0.01;
         
@@ -301,15 +815,15 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // Handle inputs
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
-
-        //Camera Speed
-        bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-        float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
-
-        //Mouse movements
+        // ------------------------------------------------------------------------------------
+        // ------------------------------ Handle inputs ---------------------------------------
+        // ------------------------------------------------------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+           glfwSetWindowShouldClose(window, true);
+        }
+        // ------------------------------------------------------------------------------------
+        
+        // -------------------------- MOUSE MOVEMENTS ------------------------------------------
         double mousePosX, mousePosY;
         glfwGetCursorPos(window, &mousePosX, &mousePosY);
 
@@ -320,45 +834,26 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         lastMousePosY = mousePosY;
 
         // Convert to spherical coordinates
-        const float cameraAngularSpeed = 60.0f;
+        const float cameraAngularSpeed = 20.0f;
+        cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
+        cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
 
+        // Clamp vertical angle to [-85, 85] degrees
+        cameraVerticalAngle = std::max(-65.0f, std::min(85.0f, cameraVerticalAngle));
 
-        //X tilt of camera
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-        {
-            cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-
-            if (cameraHorizontalAngle > 360)
-            {
-                cameraHorizontalAngle -= 360;
-            }
-            else if (cameraHorizontalAngle < -360)
-            {
-                cameraHorizontalAngle += 360;
-            }
-
-            theta = radians(cameraHorizontalAngle);
-
-
-        }
-        //Y tilt of camera
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
-        {
-
-            cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
-
-            // Clamp vertical angle to [-85, 85] degrees
-            cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
-
-            phi = radians(cameraVerticalAngle);
-
-        }
+        float theta = radians(cameraHorizontalAngle);
+        float phi = radians(cameraVerticalAngle);
 
         cameraLookAt = vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
+        vec3 frontVector = vec3(cosf(theta), 0.0f, -1.0f * sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
+        vec3 cameraSideVector2 = glm::cross(frontVector, vec3(0.0f, 1.0f, 0.0f));
 
         glm::normalize(cameraSideVector);
-
+        // ------------------------------------------------------------------------------------
+        //Camera Speed
+        bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+        float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
         //Zoom in and out
         float zoomSpeed = 0.01f;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -378,7 +873,6 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             if (fov > 90.0) {
                 fov = 90.0f;
             }
-
             projectionMatrix = perspective(fov, // field of view in degrees
                 1024.0f / 768.0f,  // aspect ratio
                 0.01f, 100.0f);   // near and far (near > 0)
@@ -387,16 +881,46 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
             
             lastMousePosY = mousePosY;
         }
+        // -------------------------- CAMERA MOVEMENTS ------------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
+            cameraMan.controlMove(-1.0f * cameraSideVector2 * currentCameraSpeed, dt);
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
+            cameraMan.controlMove(1.0f * cameraSideVector2 * currentCameraSpeed, dt);
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {  // move camera backward
+            cameraMan.controlMove(-1.0f * frontVector * currentCameraSpeed, dt);
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {    // move camera forward
+            cameraMan.controlMove(1.0f * frontVector * currentCameraSpeed, dt);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
+            if (!spacePressed && cameraMan.getOnGround()) {
+                cameraMan.charJump();
+                spacePressed = true;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) { // move camera up
+            spacePressed = false;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { // move camera down
+        }
+
+        cameraMan.updatePos(dt);
+
+        cameraPosition = cameraMan.getHeadPosition();
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
-      
+
+        SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
     }
 
     // Shutdown GLFW
     glfwTerminate();
-
     return 0;
 }
 
@@ -404,7 +928,7 @@ bool initContext() {     // Initialize GLFW and OpenGL version
     glfwInit();
 
 #if defined(PLATFORM_OSX)
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
