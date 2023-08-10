@@ -36,7 +36,7 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 	if (VAO != NULL)
-		glDrawArrays(drawMode, 0, this->vertCount);
+		glDrawElements(drawMode, vertCount, GL_UNSIGNED_INT, 0);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation,textureLocation);
@@ -63,7 +63,7 @@ void gameObject::drawModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 
 	if (VAO != NULL)
-		glDrawArrays(drawMode, 0, this->vertCount);
+		glDrawElements(drawMode, vertCount, GL_UNSIGNED_INT, 0);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
@@ -135,14 +135,6 @@ void gameObject::removeChildObject(int index)
 {
 	gameObject* temp = (childGameObjects.at(index));
 	childGameObjects.erase(childGameObjects.begin()+index);
-	if (temp->getChildArray().size() > 0)
-	{
-		for (int i = temp->getChildArray().size() - 1; i >= 0; i--)
-		{
-			delete temp->getChildObject(i);
-		}
-	}
-	
 }
 
 void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation)
@@ -166,11 +158,11 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 
-	if (VAO != NULL)
-		glDrawArrays(drawMode, 0, this->vertCount);
+	if (this->VAO != NULL)
+		glDrawElements(drawMode, this->vertCount, GL_UNSIGNED_INT, 0);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
-		childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation,textureLocation);
+		this->childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation, textureLocation);
 	}
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, lastBoundTexture);
@@ -195,7 +187,7 @@ void gameObject::drawChildModelShadows(GLenum drawMode, GLuint shaderProgram, GL
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 
 	if (VAO != NULL)
-		glDrawArrays(drawMode, 0, this->vertCount);
+		glDrawElements(drawMode, this->vertCount, GL_UNSIGNED_INT, 0);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
