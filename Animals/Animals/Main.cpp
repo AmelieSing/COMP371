@@ -12,6 +12,8 @@
 #include <sstream>
 #include <streambuf>
 
+#include <stdlib.h>
+
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
 
@@ -33,6 +35,9 @@
 
 #include "gameObject.h"
 
+#include "OBJloader.h" 
+#include "OBJloaderV2.h"
+
 using namespace glm;
 using namespace std;
 
@@ -48,6 +53,40 @@ void handleInputs();
 
 GLFWwindow* window = NULL;
 
+
+const char* vertexShaderSource = R"(
+    #version 330 core
+    layout(location = 0) in vec2 aPos;
+    layout(location = 1) in vec2 aTexCoord;
+
+    out vec2 TexCoord;
+    uniform mat4 model;
+
+    void main()
+    {
+        gl_Position =model * vec4(aPos.x, aPos.y, 0.0, 1.0);
+        TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y); // Flip the texture vertically
+    }
+)";
+
+const char* fragmentShaderSource = R"(
+    #version 330 core
+    in vec2 TexCoord;
+    out vec4 FragColor;
+
+    uniform sampler2D ourTexture;
+
+    void main()
+    {
+        vec4 texColor = texture(ourTexture, TexCoord);
+        
+        if (texColor.a < 1.0)
+        {
+            FragColor = mix(FragColor, vec4(0.0, 0.0, 0.0, 0.0), 1.0 - texColor.a);
+        }
+        FragColor = texColor; 
+    }
+)";
 
 unsigned int loadCubemap(vector<std::string> faces)
 {
@@ -82,6 +121,133 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 }
 
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+    int k1, k2;
+    for (int i = 0; i <= slices; i++) {
+        k1 = i * (stacks + 1);
+        k2 = k1 + stacks + 1;
+        for (int j = 0; j <= stacks; j++, k1++, k2++) {
+            vec3 v;
+            float theta = 2.0f * 3.14f * j / slices;
+            float phi = 3.14f * i / stacks;
+            v.x = radius * cos(theta) * sin(phi);
+            v.y = radius * sin(theta) * sin(phi);
+            v.z = radius * cos(phi);
+            vertices.push_back(v);
+            vec3 n(v.x / radius, v.y / radius, v.z / radius);
+            normals.push_back(n);
+            vec2 m;
+            m.x = (float)j / (float)slices;
+            m.y = (float)i / (float)stacks;
+            UV.push_back(m);
+
+            if (i != 0) {
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
+            }
+
+            // k1+1 => k2 => k2+1
+            if (i != (slices - 1)) {
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
+            }
+        }
+    }
+}
+
+GLuint setupModelVBO(string path, int& vertexCount) {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> UVs;
+
+    // read the vertex data from the model's OBJ file
+    loadOBJ(path.c_str(), vertices, normals, UVs);
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);  // Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and
+    // attribute pointer(s).
+
+    // Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+        &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    // Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3),
+        &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+
+    // UVs VBO setup
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(),
+        GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+        (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent
+    // strange bugs, as we are using multiple VAOs)
+    vertexCount = vertices.size();
+    return VAO;
+}
+
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices) {
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO); //Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+    //Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    //Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    //UVs VBO setupdra
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    //EBO setup
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+    vertexCount = vertexIndices.size();
+    return VAO;
+}
 
 int main(int argc, char* argv[])
 {
@@ -99,6 +265,16 @@ int main(int argc, char* argv[])
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
         "./Assets/skybox/skyboxfs.glsl");
+
+    GLuint titleTextureID = loadTexture("./Assets/Textures/titled.png");
+
+
+    //string spherePath = "./Assets/Models/sphere.obj";
+
+    //int sphereVertices;
+    //GLuint sphereVAO = setupModelVBO(spherePath, sphereVertices);
+
+    
 
     //change skybox image here
     vector<std::string> faces
@@ -167,8 +343,6 @@ int main(int argc, char* argv[])
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    
     
     //Vector Array Objects
     // int vaColorCube = createVertexArrayCube();
@@ -257,6 +431,16 @@ int main(int argc, char* argv[])
     glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
 
     std::cout << cubemapTexture;
+
+
+    vector<int> vertexIndices;
+    //The contiguous sets of three indices of vertices, normals and UVs, used to make a triangle
+    vector<glm::vec3> vertices;
+    vector<glm::vec3> normals;
+    vector<glm::vec2> UVs;
+    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
+    int sphere2Vertices;
+    GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
 
 
     // glActiveTexture(GL_TEXTURE3);
@@ -371,12 +555,80 @@ int main(int argc, char* argv[])
         head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
         head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
 
+
     }
     gameObject wokidooAnimalPivot;
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
     // Entering Main Loop
+
+    //plane
+    float planevertices[] = {
+        // Positions       // Texture Coords
+        -0.5f, -0.5f,     0.0f, 0.0f,
+         0.5f, -0.5f,     1.0f, 0.0f,
+         0.5f,  0.5f,     1.0f, 1.0f,
+        -0.5f,  0.5f,     0.0f, 1.0f,
+    };
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planevertices), planevertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Specify vertex attributes
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("./Assets/Textures/brick.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        GLenum format = nrChannels == 3 ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture!" << std::endl;
+    }
+    stbi_image_free(data);
+
+    GLuint vertexShader, fragmentShader, planeshaderProgram;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+    glCompileShader(vertexShader);
+
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+    glCompileShader(fragmentShader);
+
+    planeshaderProgram = glCreateProgram();
+    glAttachShader(planeshaderProgram, vertexShader);
+    glAttachShader(planeshaderProgram, fragmentShader);
+    glLinkProgram(planeshaderProgram);
+
+    
+    
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -419,7 +671,7 @@ int main(int argc, char* argv[])
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
 
-
+        
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -481,12 +733,19 @@ int main(int argc, char* argv[])
 
         }
 
+        //BALL SAMPLE DISPLAY
+        glBindVertexArray(sphere2VAO);
+        glUseProgram(shaderProgram);
+        /*glDrawArrays(GL_TRIANGLES, 0, sphere2Vertices);*/
+        glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        
 
         //skybox
         glDepthFunc(GL_LEQUAL);
         glUseProgram(skyboxShader);
         SetUniformMat4(skyboxShader, "projection", projectionMatrix);
-
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
@@ -494,6 +753,27 @@ int main(int argc, char* argv[])
         glBindVertexArray(0);
         glActiveTexture(GL_TEXTURE0);
         glDepthFunc(GL_LESS);
+
+        //plane sample display
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUseProgram(planeshaderProgram);
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, titleTextureID);
+        GLuint textureLocation = glGetUniformLocation(planeshaderProgram, "ourTexture");
+        glUniform1i(textureLocation, 5); // Use texture unit 5
+        glm::mat4 model = glm::mat4(1.0f);
+        model = translate(mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+
+        // Get the location of the "model" uniform in the shader
+        GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
+
+        // Pass the model matrix to the shader
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
         
 
 
@@ -647,7 +927,6 @@ int main(int argc, char* argv[])
 
     // Shutdown GLFW
     glfwTerminate();
-    cout << cameraHorizontalAngle << endl;
     return 0;
 }
 
