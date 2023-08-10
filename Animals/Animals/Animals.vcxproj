@@ -145,6 +145,8 @@
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Quad.h" />
+    <ClInclude Include="OBJloader.h" />
+    <ClInclude Include="OBJloaderV2.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
