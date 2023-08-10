@@ -137,10 +137,16 @@
   <ItemGroup>
     <ClCompile Include="gameObject.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Quad.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameObject.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Quad.h" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

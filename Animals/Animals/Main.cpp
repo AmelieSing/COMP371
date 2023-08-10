@@ -32,6 +32,7 @@
 #include "shaderloader.h"
 
 #include "gameObject.h"
+#include "World.h"
 
 using namespace glm;
 using namespace std;
@@ -92,6 +93,7 @@ int main(int argc, char* argv[])
     string shaderPathPrefix = "./Assets/mycoal_shaders/";
     int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
+    int particleShaderProgram = loadSHADER(shaderPathPrefix + "Texture.vertexshader", shaderPathPrefix + "Texture.fragmentshader");
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
@@ -237,6 +239,9 @@ int main(int argc, char* argv[])
 
     SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
     SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+    mat4 ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+    SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
 
     // mat4 worldMatrix = mat4(1.0f);
     int vao = createCubeVAO();
@@ -376,6 +381,10 @@ int main(int argc, char* argv[])
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+
+    //Particules 
+    World world;
+
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {
@@ -510,6 +519,10 @@ int main(int argc, char* argv[])
         rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(wokidooAnimalRotate * 15)));
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
         
+        world.Update(dt);
+        world.Draw(brickTextureID, particleShaderProgram);
+
+
         //Rotate the world
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate left
         {
@@ -604,6 +617,9 @@ int main(int argc, char* argv[])
                 0.01f, 100.0f);   // near and far (near > 0)
 
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
+            ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+            SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
             
             lastMousePosY = mousePosY;
         }
@@ -642,6 +658,9 @@ int main(int argc, char* argv[])
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+        ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+        SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
 
     }
 
