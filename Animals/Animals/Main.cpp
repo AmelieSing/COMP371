@@ -54,6 +54,40 @@ void handleInputs();
 GLFWwindow* window = NULL;
 
 
+const char* vertexShaderSource = R"(
+    #version 330 core
+    layout(location = 0) in vec2 aPos;
+    layout(location = 1) in vec2 aTexCoord;
+
+    out vec2 TexCoord;
+    uniform mat4 model;
+
+    void main()
+    {
+        gl_Position =model * vec4(aPos.x, aPos.y, 0.0, 1.0);
+        TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y); // Flip the texture vertically
+    }
+)";
+
+const char* fragmentShaderSource = R"(
+    #version 330 core
+    in vec2 TexCoord;
+    out vec4 FragColor;
+
+    uniform sampler2D ourTexture;
+
+    void main()
+    {
+        vec4 texColor = texture(ourTexture, TexCoord);
+        
+        if (texColor.a < 1.0)
+        {
+            FragColor = mix(FragColor, vec4(0.0, 0.0, 0.0, 0.0), 1.0 - texColor.a);
+        }
+        FragColor = texColor; 
+    }
+)";
+
 unsigned int loadCubemap(vector<std::string> faces)
 {
     unsigned int textureID;
@@ -232,6 +266,9 @@ int main(int argc, char* argv[])
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
         "./Assets/skybox/skyboxfs.glsl");
 
+    GLuint titleTextureID = loadTexture("./Assets/Textures/titled.png");
+
+
     //string spherePath = "./Assets/Models/sphere.obj";
 
     //int sphereVertices;
@@ -306,8 +343,6 @@ int main(int argc, char* argv[])
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    
     
     //Vector Array Objects
     // int vaColorCube = createVertexArrayCube();
@@ -527,6 +562,73 @@ int main(int argc, char* argv[])
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
     // Entering Main Loop
+
+    //plane
+    float planevertices[] = {
+        // Positions       // Texture Coords
+        -0.5f, -0.5f,     0.0f, 0.0f,
+         0.5f, -0.5f,     1.0f, 0.0f,
+         0.5f,  0.5f,     1.0f, 1.0f,
+        -0.5f,  0.5f,     0.0f, 1.0f,
+    };
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    GLuint VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planevertices), planevertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Specify vertex attributes
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("./Assets/Textures/brick.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        GLenum format = nrChannels == 3 ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture!" << std::endl;
+    }
+    stbi_image_free(data);
+
+    GLuint vertexShader, fragmentShader, planeshaderProgram;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+    glCompileShader(vertexShader);
+
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+    glCompileShader(fragmentShader);
+
+    planeshaderProgram = glCreateProgram();
+    glAttachShader(planeshaderProgram, vertexShader);
+    glAttachShader(planeshaderProgram, fragmentShader);
+    glLinkProgram(planeshaderProgram);
+
+    
+    
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -569,7 +671,7 @@ int main(int argc, char* argv[])
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
 
-
+        
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -629,9 +731,6 @@ int main(int argc, char* argv[])
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
-           
-
-
         }
 
         //BALL SAMPLE DISPLAY
@@ -640,13 +739,13 @@ int main(int argc, char* argv[])
         /*glDrawArrays(GL_TRIANGLES, 0, sphere2Vertices);*/
         glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
         
 
         //skybox
         glDepthFunc(GL_LEQUAL);
         glUseProgram(skyboxShader);
         SetUniformMat4(skyboxShader, "projection", projectionMatrix);
-
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
@@ -654,6 +753,27 @@ int main(int argc, char* argv[])
         glBindVertexArray(0);
         glActiveTexture(GL_TEXTURE0);
         glDepthFunc(GL_LESS);
+
+        //plane sample display
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUseProgram(planeshaderProgram);
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, titleTextureID);
+        GLuint textureLocation = glGetUniformLocation(planeshaderProgram, "ourTexture");
+        glUniform1i(textureLocation, 5); // Use texture unit 5
+        glm::mat4 model = glm::mat4(1.0f);
+        model = translate(mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+
+        // Get the location of the "model" uniform in the shader
+        GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
+
+        // Pass the model matrix to the shader
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
         
 
 
@@ -807,7 +927,6 @@ int main(int argc, char* argv[])
 
     // Shutdown GLFW
     glfwTerminate();
-    cout << cameraHorizontalAngle << endl;
     return 0;
 }
 
