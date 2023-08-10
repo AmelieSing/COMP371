@@ -47,7 +47,6 @@ public:
 	void removeChildObject(int index);
 	gameObject* getChildObject(int index) { return childGameObjects.at(index); };
 	std::vector<gameObject*> &getChildArray() { return childGameObjects; };
-	void generateAnimal(gameObject& animal, gameObject& neck_joint, gameObject& leftHip_joint, gameObject& rightHip_joint, gameObject& leftShoulder_joint, gameObject& rightShoulder_joint);
 
 private:
 	glm::vec3 colourVector = glm::vec3(1.0f);

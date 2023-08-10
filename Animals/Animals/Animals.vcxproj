@@ -135,10 +135,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="animalGenerators.cpp" />
     <ClCompile Include="gameObject.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="animalGenerators.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

@@ -31,6 +31,7 @@
 #include "shaderloader.h"
 
 #include "gameObject.h"
+#include "animalGenerators.h"
 
 using namespace glm;
 using namespace std;
@@ -171,92 +172,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
     gameObject leftShoulder_joint;
     gameObject rightShoulder_joint;
     float wokidooAnimalRotate = 0.0f;
+    generateAnimal(vao,36,defaultTextureID,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
 
-    /*
-    wokidooAnimal.setTransformPosition(0.0f, 6.0f, 0.0f);
-    {
-        wokidooAnimal.addChildObject(&leftHip_joint);
-        wokidooAnimal.addChildObject(&rightHip_joint);
-        wokidooAnimal.addChildObject(&neck_joint);
-        wokidooAnimal.addChildObject(&leftShoulder_joint);
-        wokidooAnimal.addChildObject(&rightShoulder_joint);
-        leftShoulder_joint.setTransformPosition(glm::vec3(2.0f,1.0f,1.5f));
-        rightShoulder_joint.setTransformPosition(glm::vec3(-2.0f, 1.0f, 1.5f));
-        leftHip_joint.setTransformPosition(glm::vec3(1.5f, -2.0f, 1.0f));
-        rightHip_joint.setTransformPosition(glm::vec3(-1.5f, -2.0f, 1.0f));
-        neck_joint.setTransformPosition(glm::vec3(0.0f,1.0f,3.0f));
-
-
-        //MAIN BODY
-        gameObject mainBody;
-        wokidooAnimal.addChildObject(&mainBody);
-        mainBody.setVAO(vao);
-        mainBody.setTexture(defaultTextureID);
-        mainBody.setVertCount(36);
-        mainBody.setTransformScale(glm::vec3(4.0f,4.0f,5.0f));
-        mainBody.setTransformPosition(0.0f, 0.0f, 1.0f);
-        mainBody.setColourVector(glm::vec3(1.0f, 0.0f, 0.0f));
-        
-        gameObject tail;
-        wokidooAnimal.addChildObject(&tail);
-        tail.setVAO(vao);
-        tail.setTexture(defaultTextureID);
-        tail.setVertCount(36);
-        tail.setTransformScale(0.6f, 2.0f, 4.0f);
-        tail.setTransformPosition(0.0f, 1.0f, -2.2f);
-        tail.setTransformRotation(45.0f, 0.0f, 0.0f);
-
-        gameObject leftWing;
-        leftShoulder_joint.addChildObject(&leftWing);
-        leftWing.setVAO(vao);
-        leftWing.setTexture(defaultTextureID);
-        leftWing.setVertCount(36);
-        leftWing.setTransformScale(glm::vec3(4.0f,1.0f,2.0f));
-        leftWing.setTransformPosition(glm::vec3(2.0f, 0.0f, 0.0f));
-
-        gameObject rightWing;
-        rightShoulder_joint.addChildObject(&rightWing);
-        rightWing.setVAO(vao);
-        rightWing.setTexture(defaultTextureID);
-        rightWing.setVertCount(36);
-        rightWing.setTransformScale(glm::vec3(4.0f, 1.0f, 2.0f));
-        rightWing.setTransformPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
-
-        gameObject leftLeg;
-        leftHip_joint.addChildObject(&leftLeg);
-        leftLeg.setVAO(vao);
-        leftLeg.setTexture(defaultTextureID);
-        leftLeg.setVertCount(36);
-        leftLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
-        leftLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-
-        gameObject rightLeg;
-        rightHip_joint.addChildObject(&rightLeg);
-        rightLeg.setVAO(vao);
-        rightLeg.setTexture(defaultTextureID);
-        rightLeg.setVertCount(36);
-        rightLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
-        rightLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-
-        gameObject head;
-        neck_joint.addChildObject(&head);
-        head.setVAO(vao);
-        head.setTexture(defaultTextureID);
-        head.setVertCount(36);
-        head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
-        head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
-    }
-    */
-    //gameObject wokidooAnimalPivot;
-    //wokidooAnimalPivot.addChildObject(&wokidooAnimal);
-    //wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
-    //wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
-    gameObject parentVAO;
-    parentVAO.setVAO(vao);
-    parentVAO.setTexture(defaultTextureID);
-    parentVAO.setVertCount(36);
-    parentVAO.generateAnimal(wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
-    wokidooAnimal.setTransformPosition(0.0f, 4.0f, 0.0f);
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
     {
@@ -335,9 +252,8 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         // ------------------- 
             bird1.draw();
             bird1.move();
-            //wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             wokidooAnimal.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-
+       
         }
 
         wokidooAnimalRotate += 0.01;
@@ -377,7 +293,7 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
         }
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // generate animal
         {
-            parentVAO.generateAnimal(wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+            generateAnimal(vao, 36, brickTextureID, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
         }
         glBindVertexArray(0);
 
@@ -483,7 +399,6 @@ const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
 
     return 0;
 }
-
 
 bool initContext() {     // Initialize GLFW and OpenGL version
     glfwInit();
