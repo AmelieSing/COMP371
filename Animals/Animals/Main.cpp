@@ -461,7 +461,7 @@ int main(int argc, char* argv[])
     vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
     vector<glm::vec2> UVs;
-    createSPhere(vertices, normals, UVs, vertexIndices, 1.0f, 40, 40);
+    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
     int sphere2Vertices;
     GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
 
@@ -739,7 +739,7 @@ int main(int argc, char* argv[])
                 birdList[i]->moveWings();
             }
             bird1->draw();
-            // bird1->move();
+            bird1->move();
             bird1->moveWings();
             bird2->draw();
             bird2->moveWings();
@@ -1318,16 +1318,19 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
 
             float angle = randomInRange(cameraHorizontalAngle + 90, cameraHorizontalAngle + 150);
             float yaw = randomInRange(0, 360);
-            // float size = randomInRange(0.5, 2.0f);
-            std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
+            float size = randomInRange(0.5, 4.0f);
+            // std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
             
             vec3 newPos(rPos * cos(radians(angle)) + cameraPosition.x, yPos, rPos * sin(radians(angle)) + cameraPosition.z);
             // std::cout << "cam - "<< cameraPosition.x << " x - z " << cameraPosition.z << std::endl;
-            std::cout << newPos.x << " x - z " << newPos.z << std::endl;
+            // std::cout << newPos.x << " x - z " << newPos.z << std::endl;
 
-            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, 1, yaw);
-
+            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, size, yaw);
+            if(i % 2 == 0) {
+                pointer->setShapeSphere();
+            }
             birdList.push_back(pointer);
+            
         }
     }
 
