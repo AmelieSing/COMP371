@@ -53,7 +53,7 @@ class Bird {
          bodySize = vec3(2.0f, 0.5f, 1.0f);
          headPosition = vec3( bodySize.x/2,
                               bodySize.y/2,
-                              bodyPosition.z);
+                              0.0f);
          wingsSize = vec3( bodySize.x/3, 
                            bodySize.y/5, 
                            bodySize.x * 0.9f);
