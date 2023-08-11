@@ -266,6 +266,9 @@ int main(int argc, char* argv[])
     GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
     GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
     GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+    GLuint treeTextureID = loadTexture("./Assets/Textures/tree.png");
+    GLuint bushTextureID = loadTexture("./Assets/Textures/busg.png");
+
 
     std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
     generatorTextures->push_back(furTextureID);
@@ -769,14 +772,30 @@ int main(int argc, char* argv[])
         glUniform1i(textureLocation, 5); // Use texture unit 5
         glm::mat4 model = glm::mat4(1.0f);
         model = translate(mat4(1.0f), glm::vec3(0.5f, 0.75f, 0.0f));
-
-        // Get the location of the "model" uniform in the shader
         GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
-
-        // Pass the model matrix to the shader
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         if(showTitle)
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+        //trees!!
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, treeTextureID);
+        glUniform1i(textureLocation, 5); 
+        model = projectionMatrix*viewMatrix*translate(mat4(1.0f), glm::vec3(-15.5f, 10.0f, -17.0f))*scale(mat4(1),vec3(20,20,20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(17.5f, 10.0f, -40.0f)) * scale(mat4(1), vec3(20, 30, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, bushTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(-20.5f, 5.0f, -10.0f)) * scale(mat4(1), vec3(30, 10, 10));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        
+        
         glBindVertexArray(0);
         glUseProgram(0);
         
