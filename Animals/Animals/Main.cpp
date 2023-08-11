@@ -37,6 +37,7 @@
 #include "shaderloader.h"
 
 #include "gameObject.h"
+#include "animalGenerators.h"
 
 #include "OBJloader.h" 
 #include "OBJloaderV2.h"
@@ -125,20 +126,20 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 }
 
-void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+void createSPhere(vector<glm::vec3>& vertices, vector<glm::vec3>& normals, vector<glm::vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
     int k1, k2;
     for (int i = 0; i <= slices; i++) {
         k1 = i * (stacks + 1);
         k2 = k1 + stacks + 1;
         for (int j = 0; j <= stacks; j++, k1++, k2++) {
-            vec3 v;
+            glm::vec3 v;
             float theta = 2.0f * 3.14f * j / slices;
             float phi = 3.14f * i / stacks;
             v.x = radius * cos(theta) * sin(phi);
             v.y = radius * sin(theta) * sin(phi);
             v.z = radius * cos(phi);
             vertices.push_back(v);
-            vec3 n(v.x / radius, v.y / radius, v.z / radius);
+            glm::vec3 n(v.x / radius, v.y / radius, v.z / radius);
             normals.push_back(n);
             vec2 m;
             m.x = (float)j / (float)slices;
@@ -267,6 +268,18 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+    GLuint furTextureID = loadTexture("./Assets/Textures/HairFur.png");
+    GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
+    GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
+    GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+
+    std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
+    generatorTextures->push_back(furTextureID);
+    generatorTextures->push_back(grassTextureID);
+    generatorTextures->push_back(scalesTextureID);
+    generatorTextures->push_back(barkTextureID);
+
+
     GLuint birdFaceTextureID = loadTexture("./Assets/Textures/bird.jpg");
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
@@ -361,9 +374,9 @@ int main(int argc, char* argv[])
     glClearColor(red, blue, green, 1.0f);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(0.6f, 30.0f, 50.0f);
-    vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
-    vec3 cameraUp(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraPosition(0.6f, 30.0f, 50.0f);
+    glm::vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
     // Other camera parameters
     float cameraSpeed = 10.0f;
@@ -497,21 +510,9 @@ int main(int argc, char* argv[])
     gameObject neck_joint;
     gameObject leftShoulder_joint;
     gameObject rightShoulder_joint;
-    wokidooAnimal.setTransformPosition(0.0f, 6.0f, 0.0f);
     float wokidooAnimalRotate = 0.0f;
-    {
-        wokidooAnimal.addChildObject(&leftHip_joint);
-        wokidooAnimal.addChildObject(&rightHip_joint);
-        wokidooAnimal.addChildObject(&neck_joint);
-        wokidooAnimal.addChildObject(&leftShoulder_joint);
-        wokidooAnimal.addChildObject(&rightShoulder_joint);
-        leftShoulder_joint.setTransformPosition(glm::vec3(2.0f,1.0f,1.5f));
-        rightShoulder_joint.setTransformPosition(glm::vec3(-2.0f, 1.0f, 1.5f));
-        leftHip_joint.setTransformPosition(glm::vec3(1.5f, -2.0f, 1.0f));
-        rightHip_joint.setTransformPosition(glm::vec3(-1.5f, -2.0f, 1.0f));
-        neck_joint.setTransformPosition(glm::vec3(0.0f,1.0f,3.0f));
-
-
+    generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+    /*
         //MAIN BODY
         gameObject mainBody;
         wokidooAnimal.addChildObject(&mainBody);
@@ -573,10 +574,12 @@ int main(int argc, char* argv[])
 
 
     }
+    */
     gameObject wokidooAnimalPivot;
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+    
     // Entering Main Loop
 
     //plane
@@ -643,7 +646,8 @@ int main(int argc, char* argv[])
     glAttachShader(planeshaderProgram, fragmentShader);
     glLinkProgram(planeshaderProgram);
 
-    
+    bool showTitle = true;
+    GLuint hRelease = GLFW_RELEASE;
     
     while (!glfwWindowShouldClose(window))
     {
@@ -707,6 +711,7 @@ int main(int argc, char* argv[])
             bird1->drawShadow();
             bird2->drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+
         }
 
 
@@ -748,7 +753,7 @@ int main(int argc, char* argv[])
             // NPC2.move();
             NPC2.rotateSelf();
             // cameraMan.updatePos(dt);
-            wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "objectColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+            wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
         }
@@ -757,7 +762,7 @@ int main(int argc, char* argv[])
         glBindVertexArray(sphere2VAO);
         glUseProgram(shaderProgram);
         /*glDrawArrays(GL_TRIANGLES, 0, sphere2Vertices);*/
-        glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, sphere2Vertices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         
@@ -784,14 +789,15 @@ int main(int argc, char* argv[])
         GLuint textureLocation = glGetUniformLocation(planeshaderProgram, "ourTexture");
         glUniform1i(textureLocation, 5); // Use texture unit 5
         glm::mat4 model = glm::mat4(1.0f);
-        model = translate(mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+        model = translate(mat4(1.0f), glm::vec3(0.5f, 0.75f, 0.0f));
 
         // Get the location of the "model" uniform in the shader
         GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
 
         // Pass the model matrix to the shader
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        if(showTitle)
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         glUseProgram(0);
         
@@ -804,6 +810,7 @@ int main(int argc, char* argv[])
         wokidooAnimalRotate += 0.01;
         
         wokidooAnimalPivot.setTransformRotation(0.0f,-100*wokidooAnimalRotate,0.0f);
+        //wokidooAnimal.setTransformRotation(0, 80 * std::sin(wokidooAnimalRotate), 0);
         leftHip_joint.setTransformRotation(glm::vec3(45 * std::sin(wokidooAnimalRotate * 10), 0.0f, 0.0f));
         rightHip_joint.setTransformRotation(glm::vec3(-45 * std::sin(wokidooAnimalRotate * 10), 0.0f, 0.0f));
         leftShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, -30 * std::sin(wokidooAnimalRotate * 15)));
@@ -835,7 +842,19 @@ int main(int argc, char* argv[])
         {
             worldRy = worldRx = 0.0f;
         }
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // generate animal
+        {
+            generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+        }
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && hRelease == GLFW_RELEASE) //toggle title 
+        {
+            if (showTitle)
+                showTitle = false;
+            else
+                showTitle = true;
+        }
         glBindVertexArray(0);
+        hRelease = glfwGetKey(window, GLFW_KEY_H);
 
         // End Frame
         glfwSwapBuffers(window);
@@ -950,7 +969,6 @@ int main(int argc, char* argv[])
     glfwTerminate();
     return 0;
 }
-
 
 bool initContext() {     // Initialize GLFW and OpenGL version
     glfwInit();
