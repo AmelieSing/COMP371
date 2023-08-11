@@ -37,6 +37,7 @@ public:
 	void setTransformScale(glm::vec3 t_sca);
 	void setTransformScale(float t_x, float t_y, float t_z);
 	void setColourVector(glm::vec3 t_coloutVector);
+	void setColourVector(float red, float green, float blue);
 	void setTexture(int t_id) { textureID = t_id; };
 	void setTextureScale(int t_scale) { textureScale = t_scale; };
 	glm::vec3 getTransformPosition() { return transform.position; };

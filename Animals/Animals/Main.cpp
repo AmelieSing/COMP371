@@ -262,6 +262,17 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+    GLuint furTextureID = loadTexture("./Assets/Textures/HairFur.png");
+    GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
+    GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
+    GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+
+    std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
+    generatorTextures->push_back(furTextureID);
+    generatorTextures->push_back(grassTextureID);
+    generatorTextures->push_back(scalesTextureID);
+    generatorTextures->push_back(barkTextureID);
+
 
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
@@ -483,7 +494,7 @@ int main(int argc, char* argv[])
     gameObject leftShoulder_joint;
     gameObject rightShoulder_joint;
     float wokidooAnimalRotate = 0.0f;
-    generateAnimal(sphere2VAO, vertexIndices.size(),defaultTextureID,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+    generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
     /*
         //MAIN BODY
         gameObject mainBody;
@@ -810,7 +821,7 @@ int main(int argc, char* argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // generate animal
         {
-            generateAnimal(sphere2VAO, vertexIndices.size(), defaultTextureID, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+            generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
         }
         glBindVertexArray(0);
 

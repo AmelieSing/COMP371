@@ -125,7 +125,13 @@ void gameObject::setColourVector(glm::vec3 t_coloutVector)
 {
 	this->colourVector = t_coloutVector;
 }
+void gameObject::setColourVector(float red,float green, float blue)
+{
+	this->colourVector.x = red;
+	this->colourVector.y = green;
+	this->colourVector.z = blue;
 
+}
 void gameObject::addChildObject(gameObject* t_object)
 {
 	childGameObjects.push_back(t_object);
