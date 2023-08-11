@@ -56,7 +56,7 @@ void handleInputs();
 
 GLFWwindow* window = NULL;
 
-void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform);
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
-
+    GLuint birdFaceTextureID = loadTexture("./Assets/Textures/bird.jpg");
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
         "./Assets/skybox/skyboxfs.glsl");
@@ -432,6 +432,10 @@ int main(int argc, char* argv[])
     glBindTexture(GL_TEXTURE_2D, brickTextureID);
     glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, birdFaceTextureID);
+    glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
+
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
@@ -444,7 +448,7 @@ int main(int argc, char* argv[])
     vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
     vector<glm::vec2> UVs;
-    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
+    createSPhere(vertices, normals, UVs, vertexIndices, 1.0f, 40, 40);
     int sphere2Vertices;
     GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
 
@@ -459,8 +463,9 @@ int main(int argc, char* argv[])
 
     vector<Bird *> birdList;
 
-    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f), 1);
-    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f), 1);
+    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0);
+    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0);
+    bird1->setShapeSphere();
     // birdList.push_back(bird1);
     // birdList.push_back(bird2);
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
@@ -729,7 +734,7 @@ int main(int argc, char* argv[])
                 birdList[i]->moveWings();
             }
             bird1->draw();
-            bird1->move();
+            // bird1->move();
             bird1->moveWings();
             bird2->draw();
             bird2->moveWings();
@@ -932,11 +937,11 @@ int main(int argc, char* argv[])
         cameraMan.updatePos(dt);
 
         cameraPosition = cameraMan.getHeadPosition();
-        generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, texture1Uniform);
+        generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
-        // SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
+        SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
     }
@@ -1273,16 +1278,16 @@ int createCubeVAO() {
 
 
 
-void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform) {
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
     int n = birdList.size();
     int numBirdInRange = 0;
-    if(n > 50) {
+    if(n > 25) {
         return;
     }
     for(int i = 0; i < n; i++) {
         vec3 distance = abs(cameraPosition - birdList[i]->getPosition());
         float length = glm::length(distance);  // distance.x
-        if(length < 50.0f) {
+        if(length < 250.0f) {
             numBirdInRange++;
         }
     }
@@ -1290,18 +1295,19 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     if(numBirdInRange < 5) {
         int diff = 5 - numBirdInRange;
         for(int i = 0; i < diff; i++) {
-            float yPos = randomInRange(5.0f, 10.0f);
-            float rPos = randomInRange(20.0f, 35.0f);
+            float yPos = randomInRange(50.0f, 70.0f);
+            float rPos = randomInRange(150.0f, 250.0f);
 
-            float angle = randomInRange(0, 360);
+            float angle = randomInRange(cameraHorizontalAngle + 90, cameraHorizontalAngle + 150);
             float yaw = randomInRange(0, 360);
-            float size = randomInRange(0.5, 2.0f);
+            // float size = randomInRange(0.5, 2.0f);
+            std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
             
             vec3 newPos(rPos * cos(radians(angle)) + cameraPosition.x, yPos, rPos * sin(radians(angle)) + cameraPosition.z);
             // std::cout << "cam - "<< cameraPosition.x << " x - z " << cameraPosition.z << std::endl;
-            // std::cout << newPos.x << " x - z " << newPos.z << std::endl;
+            std::cout << newPos.x << " x - z " << newPos.z << std::endl;
 
-            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, texture1Uniform, newPos, size);
+            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, 1, yaw);
 
             birdList.push_back(pointer);
         }
