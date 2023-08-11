@@ -25,4 +25,4 @@
 - Michael Hong
 - Zi Di Zhu
 
-[Original Project Proposal](https://docs.google.com/presentation/d/1Nm4k64vbQz6VPOj2YlS4j0XOhi3_zk4nit-rBKwVM9I/edit?usp=sharing) / [Video Demo](https://www.youtube.com/watch?v=qprQn4G310A&ab_channel=nebularswamp)
+[project repository](https://github.com/AmelieSing/COMP371/) / [Original Project Proposal](https://docs.google.com/presentation/d/1Nm4k64vbQz6VPOj2YlS4j0XOhi3_zk4nit-rBKwVM9I/edit?usp=sharing) / [Video Demo](https://www.youtube.com/watch?v=qprQn4G310A&ab_channel=nebularswamp)
