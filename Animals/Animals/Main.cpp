@@ -767,7 +767,7 @@ int main(int argc, char* argv[])
         GLuint textureLocation = glGetUniformLocation(planeshaderProgram, "ourTexture");
         glUniform1i(textureLocation, 5); // Use texture unit 5
         glm::mat4 model = glm::mat4(1.0f);
-        model = translate(mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+        model = translate(mat4(1.0f), glm::vec3(0.5f, 0.75f, 0.0f));
 
         // Get the location of the "model" uniform in the shader
         GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
