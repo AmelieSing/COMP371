@@ -629,7 +629,8 @@ int main(int argc, char* argv[])
     glAttachShader(planeshaderProgram, fragmentShader);
     glLinkProgram(planeshaderProgram);
 
-    
+    bool showTitle = true;
+    GLuint hRelease = GLFW_RELEASE;
     
     while (!glfwWindowShouldClose(window))
     {
@@ -774,7 +775,8 @@ int main(int argc, char* argv[])
 
         // Pass the model matrix to the shader
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        if(showTitle)
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         glUseProgram(0);
         
@@ -823,7 +825,15 @@ int main(int argc, char* argv[])
         {
             generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
         }
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && hRelease == GLFW_RELEASE) //toggle title 
+        {
+            if (showTitle)
+                showTitle = false;
+            else
+                showTitle = true;
+        }
         glBindVertexArray(0);
+        hRelease = glfwGetKey(window, GLFW_KEY_H);
 
         // End Frame
         glfwSwapBuffers(window);
