@@ -42,11 +42,12 @@ class Bird {
                               1.0f * bodySize.z / 3);
          modelMatrix = mat4(1.0f);
       }
-      Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos   ) {
+      Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos, float size) {
          this->shaderProgram = shaderProgram;
          this->vao = vao;
          this->texture1Uniform = texture1Uniform;
          this-> shaderShadowProgram = shaderShadowProgram;
+         this->scaleFactor = scaleFactor * size;
 
          bodyPosition = bodyPos;
          bodySize = vec3(2.0f, 0.5f, 1.0f);
@@ -249,6 +250,9 @@ class Bird {
           else {
               wingsAngle--;
           }
+      }
+      vec3 getPosition() {
+         return bodyPosition;
       }
    private:
       vec3 bodyPosition;

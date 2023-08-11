@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <streambuf>
+#include <math.h>
 
 #include <stdlib.h>
 
@@ -24,6 +25,8 @@
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
+
+#include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
 #include "animalBird.cpp"
 #include "characterObject.cpp"
@@ -53,6 +56,8 @@ void handleInputs();
 
 GLFWwindow* window = NULL;
 
+float randomInRange(float lowerBound, float upperBound);
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -412,8 +417,8 @@ int main(int argc, char* argv[])
     SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
     SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
 
-    // mat4 worldMatrix = mat4(1.0f);
     int vao = createCubeVAO();
+
     GLint shadowMapUniform = glGetUniformLocation(shaderProgram, "shadow_map");
     glUniform1i(shadowMapUniform, 0); // Texture unit 1 is now bound to texture1
 
@@ -451,12 +456,17 @@ int main(int argc, char* argv[])
     // glBindTexture(GL_TEXTURE_2D, steelTextureID);
     // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
 
-    Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f));
-    Bird bird2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f));
+    vector<Bird *> birdList;
+
+    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(5.0f, 5.0f, 0.0f), 1);
+    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, texture1Uniform, vec3(-5.0f, 5.0f, 0.0f), 1);
+    // birdList.push_back(bird1);
+    // birdList.push_back(bird2);
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
     characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
     characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
     
+
     // For frame time
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
@@ -670,8 +680,8 @@ int main(int argc, char* argv[])
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
-
-        
+        generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, texture1Uniform);
+        int n = birdList.size();
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -682,16 +692,17 @@ int main(int argc, char* argv[])
             glClear(GL_DEPTH_BUFFER_BIT);
 
             createFloorShadow(shadowShaderProgram, vao);
-
+            for(int i = 0; i < n; i++) {
+                birdList[i]->drawShadow();
+            }
             cameraMan.drawShadow();
             NPC1.drawShadow();
             NPC2.drawShadow();
 
-            bird1.drawShadow();
-            bird2.drawShadow();
+            bird1->drawShadow();
+            bird2->drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
         }
-
 
 
         // ----------------------------------------------------------------------------
@@ -712,12 +723,16 @@ int main(int argc, char* argv[])
             createFloor(shaderProgram, vao, texture1Uniform);
         
         // ------------------- 
-
-            bird1.draw();
-            bird1.move();
-            bird1.moveWings();
-            bird2.draw();
-            bird2.moveWings();
+            
+            for(int i = 0; i < n; i++) {
+                birdList[i]->draw();
+                birdList[i]->moveWings();
+            }
+            bird1->draw();
+            bird1->move();
+            bird1->moveWings();
+            bird2->draw();
+            bird2->moveWings();
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
             cameraMan.moveAnimation();
@@ -1253,4 +1268,41 @@ int createCubeVAO() {
 
     
     return vertexBufferObject;
+}
+
+float randomInRange(float lowerBound, float upperBound) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(lowerBound, upperBound);
+    return dist(gen);
+}
+
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform) {
+    int n = birdList.size();
+    int numBirdInRange = 0;
+
+    for(int i = 0; i < n; i++) {
+        vec3 distance = cameraPosition - birdList[i]->getPosition();
+        float distanceX = distance.x;
+        float distanceZ = distance.z;
+        float length = abs(distance.length());  // distance.x
+        float length2 = abs(sqrt(powf(distanceX, 2) + powf(distanceZ, 2)));  // distance.x
+    
+        if(length < 5.0f) {
+            numBirdInRange++;
+        }
+    }
+
+    if(numBirdInRange < 5) {
+        int diff = 5 - numBirdInRange;
+        for(int i = 0; i < diff; i++) {
+            float yPos = randomInRange(5.0f, 10.0f);
+            float rPos = randomInRange(3.0f, 6.0f);
+            float angle = randomInRange(cameraHorizontalAngle - 50, cameraHorizontalAngle + 50);
+            float size = randomInRange(0.5, 2.0f);
+            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, texture1Uniform, vec3(rPos * cos(radians(angle)), yPos, rPos * sin(radians(angle))), 1);
+            birdList.push_back(pointer);
+        }
+    }
+
 }
