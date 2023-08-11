@@ -10,7 +10,7 @@
 - Skybox
 - Canvas layer for displaying UI elements
 
-![chrome-capture-2023-7-11](https://github.com/AmelieSing/COMP371/assets/40129612/45b6dceb-34f1-4a86-8f83-642a947510d6)
+![ezgif com-video-to-gif](https://github.com/AmelieSing/COMP371/assets/40129612/d018e9f3-2426-41d7-b3c1-aa3eba689fcf)
 
 ## Controls:
 - Mouse : move camera
