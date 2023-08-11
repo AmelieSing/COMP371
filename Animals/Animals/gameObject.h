@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <time.h>
 #include <vector>
 
 
@@ -36,6 +37,7 @@ public:
 	void setTransformScale(glm::vec3 t_sca);
 	void setTransformScale(float t_x, float t_y, float t_z);
 	void setColourVector(glm::vec3 t_coloutVector);
+	void setColourVector(float red, float green, float blue);
 	void setTexture(int t_id) { textureID = t_id; };
 	void setTextureScale(int t_scale) { textureScale = t_scale; };
 	glm::vec3 getTransformPosition() { return transform.position; };
@@ -45,7 +47,7 @@ public:
 	void addChildObject(gameObject* t_object);
 	void removeChildObject(int index);
 	gameObject* getChildObject(int index) { return childGameObjects.at(index); };
-	std::vector<gameObject*> getChildArray() { return childGameObjects; };
+	std::vector<gameObject*> &getChildArray() { return childGameObjects; };
 
 private:
 	glm::vec3 colourVector = glm::vec3(1.0f);
