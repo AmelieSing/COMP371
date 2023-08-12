@@ -16,7 +16,16 @@ using namespace glm;
     Quad::Quad(int vao, int vertexCount, int shaderProgram) : Model(vao, vertexCount, shaderProgram), age(0), opacity(1) {}
 
     // TODO 2 - Add an expiration condition
-    bool Quad::expired() const { return false; }
+    bool Quad::expired() const { 
+        if (age >= LIFETIME)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
     void Quad::Update(float dt) {
         Model::Update(dt);
@@ -38,12 +47,16 @@ using namespace glm;
         GLuint textureLocation =
            glGetUniformLocation(shaderProgram, "textureSampler");
         glBindTexture(GL_TEXTURE_2D, textureID);
-      glUniform1i(textureLocation, 0);
+      glUniform1i(textureLocation, 1);
         GLuint opacityLocation =
             glGetUniformLocation(shaderProgram, "opacity");
         glUniform1f(opacityLocation, opacity);
-        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_DEPTH_TEST);
         Model::Draw(textureID, shaderProgram);
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
     }
 
     // Static stuff

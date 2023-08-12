@@ -263,6 +263,7 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+    GLuint smokeTextureID = loadTexture("./Assets/Textures/smoke.png");
 
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
@@ -434,6 +435,10 @@ int main(int argc, char* argv[])
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, smokeTextureID);
+    glUniform1i(texture1Uniform, 5); // Texture unit 2 is now bound to texture1
 
     std::cout << cubemapTexture;
 
@@ -800,7 +805,8 @@ int main(int argc, char* argv[])
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
         
         world.Update(dt);
-        world.Draw(brickTextureID, particleShaderProgram);
+        world.Draw(smokeTextureID, particleShaderProgram);
+        glBindTexture(GL_TEXTURE_2D, defaultTextureID);
 
 
         //Rotate the world

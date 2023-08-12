@@ -17,5 +17,5 @@ void main()
 {
 	vec4 textureColor = texture( textureSampler, UV );
 
-    color = textureColor; // TODO 3 add opacity!
+    color = textureColor * opacity;
 }

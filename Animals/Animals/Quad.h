@@ -16,7 +16,7 @@ private:
 	float age, opacity;
 
 	const glm::vec3 SCALE_I = glm::vec3(0, 0, 0);
-	const glm::vec3 SCALE_F = glm::vec3(2, 2, 2);
+	const glm::vec3 SCALE_F = glm::vec3(10, 10, 10);
 	const float OPACITY_I = 1;
 	const float OPACITY_F = 0;
 	const float LIFETIME = 5;  // in seconds

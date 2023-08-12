@@ -38,6 +38,7 @@ Model::Model(int vao, int vertexCount, int shaderProgram)
             position += dt * velocity;
             rotationAxis = glm::mix(rotationAxis, angularAxis, dt);
             rotationAngleInDegrees += dt * angularVelocityInDegrees;
+            Accelerate(vec3(0.0f, 1.2f, 0.0f), dt);
         }
 
         void Model::Draw(int textureID, int shaderProgram) {
