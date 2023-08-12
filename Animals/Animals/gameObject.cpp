@@ -21,8 +21,6 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
 	glActiveTexture(GL_TEXTURE1);
-	GLint lastBoundTexture;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastBoundTexture);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glm::mat4 worldMatrix = glm::translate(glm::mat4(1.0f), this->transform.position) *
 		glm::rotate(glm::mat4(1.0f), glm::radians(this->transform.rotation[0]), glm::vec3(1.0f, 0.0f, 0.0f)) * //rotate x
@@ -36,13 +34,12 @@ void gameObject::drawModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMa
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 	if (VAO != NULL)
-		glDrawElements(drawMode, vertCount, GL_UNSIGNED_INT, 0);
+		glDrawArrays(drawMode, 0, this->vertCount);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation,textureLocation);
 	}
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, lastBoundTexture);
+
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &glm::mat4(1.0f)[0][0]);
 	glUniform3f(colourVectorLocation, glm::vec3(1.0f)[0], glm::vec3(1.0f)[1], glm::vec3(1.0f)[2]);
 	glBindVertexArray(0);
@@ -63,7 +60,7 @@ void gameObject::drawModelShadows(GLenum drawMode, GLuint shaderProgram, GLuint 
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 
 	if (VAO != NULL)
-		glDrawElements(drawMode, vertCount, GL_UNSIGNED_INT, 0);
+		glDrawArrays(drawMode, 0, this->vertCount);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
@@ -125,13 +122,7 @@ void gameObject::setColourVector(glm::vec3 t_coloutVector)
 {
 	this->colourVector = t_coloutVector;
 }
-void gameObject::setColourVector(float red,float green, float blue)
-{
-	this->colourVector.x = red;
-	this->colourVector.y = green;
-	this->colourVector.z = blue;
 
-}
 void gameObject::addChildObject(gameObject* t_object)
 {
 	childGameObjects.push_back(t_object);
@@ -139,8 +130,7 @@ void gameObject::addChildObject(gameObject* t_object)
 
 void gameObject::removeChildObject(int index)
 {
-	gameObject* temp = (childGameObjects.at(index));
-	childGameObjects.erase(childGameObjects.begin()+index);
+	childGameObjects.erase(childGameObjects.begin() + index);
 }
 
 void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint worldMatrixLocation, glm::mat4 parentMatrix, GLuint colourVectorLocation, GLuint textureLocation)
@@ -148,8 +138,6 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 	glUseProgram(shaderProgram);
 	glBindVertexArray(this->VAO);
 	glActiveTexture(GL_TEXTURE1);
-	GLint lastBoundTexture;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastBoundTexture);
 	glBindTexture(GL_TEXTURE_2D, this->textureID);
 	glm::mat4 worldMatrix = glm::mat4(1.0f);
 	worldMatrix *= parentMatrix;
@@ -164,14 +152,13 @@ void gameObject::drawChildModel(GLenum drawMode, GLuint shaderProgram, GLuint wo
 	glUniform3f(colourVectorLocation, this->colourVector[0], this->colourVector[1], this->colourVector[2]); //send colour to shader
 	//glUniform1i(textureLocation, 0);                // Set our Texture sampler to use Texture Unit 0
 
-	if (this->VAO != NULL)
-		glDrawElements(drawMode, this->vertCount, GL_UNSIGNED_INT, 0);
+	if (VAO != NULL)
+		glDrawArrays(drawMode, 0, this->vertCount);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
-		this->childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation, textureLocation);
+		childGameObjects[i]->drawChildModel(drawMode, shaderProgram, worldMatrixLocation, worldMatrix, colourVectorLocation,textureLocation);
 	}
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, lastBoundTexture);
+
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &glm::mat4(1.0f)[0][0]);
 	glUniform3f(colourVectorLocation, glm::vec3(1.0f)[0], glm::vec3(1.0f)[1], glm::vec3(1.0f)[2]);
 	glBindVertexArray(0);
@@ -193,7 +180,7 @@ void gameObject::drawChildModelShadows(GLenum drawMode, GLuint shaderProgram, GL
 	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]); //send transform to shader
 
 	if (VAO != NULL)
-		glDrawElements(drawMode, this->vertCount, GL_UNSIGNED_INT, 0);
+		glDrawArrays(drawMode, 0, this->vertCount);
 	for (int i = 0; i < childGameObjects.size(); i++)
 	{
 		childGameObjects[i]->drawChildModelShadows(drawMode, shaderProgram, worldMatrixLocation, worldMatrix);
