@@ -264,6 +264,11 @@ int main(int argc, char* argv[])
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
+    GLuint furTextureID = loadTexture("./Assets/Textures/HairFur.png");
+    GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
+    GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
+    GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+    GLuint smokeTextureID = loadTexture("./Assets/Textures/smoke.png");
 
     std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
     generatorTextures->push_back(furTextureID);
@@ -634,8 +639,9 @@ int main(int argc, char* argv[])
     glLinkProgram(planeshaderProgram);
 
     bool showTitle = true;
-    GLuint hRelease = GLFW_RELEASE;
-    
+    World world;
+    GLuint hRelease = GLFW_RELEASE;   
+     
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
