@@ -38,6 +38,7 @@
 
 #include "gameObject.h"
 #include "animalGenerators.h"
+#include "World.h"
 
 #include "OBJloader.h" 
 #include "OBJloaderV2.h"
@@ -265,6 +266,7 @@ int main(int argc, char* argv[])
     string shaderPathPrefix = "./Assets/mycoal_shaders/";
     int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
+    int particleShaderProgram = loadSHADER(shaderPathPrefix + "Texture.vertexshader", shaderPathPrefix + "Texture.fragmentshader");
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
@@ -272,6 +274,7 @@ int main(int argc, char* argv[])
     GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
     GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
     GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+    GLuint smokeTextureID = loadTexture("./Assets/Textures/smoke.png");
     GLuint treeTextureID = loadTexture("./Assets/Textures/tree.png");
     GLuint bushTextureID = loadTexture("./Assets/Textures/busg.png");
 
@@ -433,6 +436,9 @@ int main(int argc, char* argv[])
 
     SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
     SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+    mat4 ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+    SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
 
     int vao = createCubeVAO();
 
@@ -455,6 +461,10 @@ int main(int argc, char* argv[])
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, smokeTextureID);
+    glUniform1i(texture1Uniform, 5); // Texture unit 2 is now bound to texture1
 
     std::cout << cubemapTexture;
 
@@ -582,7 +592,6 @@ int main(int argc, char* argv[])
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
-    
     // Entering Main Loop
 
     //plane
@@ -650,8 +659,9 @@ int main(int argc, char* argv[])
     glLinkProgram(planeshaderProgram);
 
     bool showTitle = true;
-    GLuint hRelease = GLFW_RELEASE;
-    
+    World world;
+    GLuint hRelease = GLFW_RELEASE;   
+     
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -836,6 +846,11 @@ int main(int argc, char* argv[])
         rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(wokidooAnimalRotate * 15)));
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
         
+        world.Update(dt);
+        world.Draw(smokeTextureID, particleShaderProgram);
+        glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+
+
         //Rotate the world
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate left
         {
@@ -942,6 +957,9 @@ int main(int argc, char* argv[])
                 0.01f, 100.0f);   // near and far (near > 0)
 
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
+            ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+            SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
             
             lastMousePosY = mousePosY;
         }
@@ -981,6 +999,9 @@ int main(int argc, char* argv[])
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+        ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+        SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
 
     }
 
