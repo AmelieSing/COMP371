@@ -53,6 +53,10 @@ class Bird {
          this->yaw = yaw;
          this->circleDistance = circleDistance;
          this->circleSpeed = circleSpeed;
+         float colorR = randomInRange(0.5f, 1.0f);
+         float colorG = randomInRange(0.5f, 1.0f);
+         float colorB = randomInRange(0.5f, 1.0f);
+         this->color = vec3(colorR, colorG, colorB);
          if(randomInRange(0.0f, 1.0f) > 0.5f) {
             circleDirection = 1.0f;
          } else {
@@ -255,8 +259,8 @@ class Bird {
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
             * scale(mat4(1.0f), bodySize * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
             glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
@@ -272,7 +276,7 @@ class Bird {
             * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            SetUniformVec3(shaderProgram, "customColor", color);
             glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
@@ -288,8 +292,8 @@ class Bird {
             * translate(mat4(1.0f), wingsPositionL) 
             * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
             glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
@@ -304,7 +308,7 @@ class Bird {
             * translate(mat4(1.0f), wingsPositionR) 
             * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            SetUniformVec3(shaderProgram, "customColor", color);
             glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
@@ -319,8 +323,8 @@ class Bird {
             * translate(mat4(1.0f), legPositionL) 
             * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
             glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
@@ -334,8 +338,8 @@ class Bird {
             * translate(mat4(1.0f), legPositionR) 
             * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(sphereVAO);
             glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
@@ -348,8 +352,8 @@ class Bird {
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
             * scale(mat4(1.0f), bodySize);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -364,7 +368,7 @@ class Bird {
             // * rotate(mat4(1.0f), radians(-90.0f), vec3(0.0f, 1.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            SetUniformVec3(shaderProgram, "customColor", color);
             glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
@@ -380,8 +384,8 @@ class Bird {
             * translate(mat4(1.0f), wingsPositionL) 
             * scale(mat4(1.0f), wingsSize);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -396,7 +400,7 @@ class Bird {
             * translate(mat4(1.0f), wingsPositionR) 
             * scale(mat4(1.0f), wingsSize);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            SetUniformVec3(shaderProgram, "customColor", color);
             glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
@@ -411,8 +415,8 @@ class Bird {
             * translate(mat4(1.0f), legPositionL) 
             * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -426,8 +430,8 @@ class Bird {
             * translate(mat4(1.0f), legPositionR) 
             * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-            SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
-            glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -468,6 +472,8 @@ class Bird {
       vec3 legPositionL;
       vec3 legPositionR;
       vec3 scaleFactor = vec3(3.0f, 3.0f, 3.0f);
+
+      vec3 color = vec3(1.0f, 1.0f, 1.0f);
 
       float circleDistance = 0.05f;
       float circleSpeed = 1.0f;
