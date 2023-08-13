@@ -42,7 +42,7 @@ class Bird {
                               1.0f * bodySize.z / 3);
          modelMatrix = mat4(1.0f);
       }
-      Bird(int shaderProgram, int shaderShadowProgram, int vao, int sphereVAO, int sphereVertices, GLint texture1Uniform, vec3 bodyPos, float size, float yaw) {
+      Bird(int shaderProgram, int shaderShadowProgram, int vao, int sphereVAO, int sphereVertices, GLint texture1Uniform, vec3 bodyPos, float size, float yaw, float circleDistance, float circleSpeed) {
          this->shaderProgram = shaderProgram;
          this->vao = vao;
          this->texture1Uniform = texture1Uniform;
@@ -51,6 +51,13 @@ class Bird {
          this->sphereVAO = sphereVAO;
          this->sphereVertices = sphereVertices;
          this->yaw = yaw;
+         this->circleDistance = circleDistance;
+         this->circleSpeed = circleSpeed;
+         if(randomInRange(0.0f, 1.0f) > 0.5f) {
+            circleDirection = 1.0f;
+         } else {
+            circleDirection = -1.0f;
+         }
 
          bodyPosition = bodyPos;
          bodySize = vec3(2.0f, 0.5f, 1.0f);
@@ -79,9 +86,9 @@ class Bird {
             // BODY
             modelMatrix = 
             translate(mat4(1.0f), bodyPosition) 
-            * scale(mat4(1.0f), scaleFactor)
+            * scale(mat4(1.0f), scaleFactor) 
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
-            * scale(mat4(1.0f), bodySize);
+            * scale(mat4(1.0f), bodySize * 0.2f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -89,12 +96,14 @@ class Bird {
             glBindVertexArray(0);
 
             // HEAD
-            modelMatrix =
+            modelMatrix = 
             translate(mat4(1.0f), bodyPosition) 
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), headPosition) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
+            * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.2f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -102,13 +111,13 @@ class Bird {
             glBindVertexArray(0);
 
             // WINGS L
-            modelMatrix = 
+            modelMatrix =
             translate(mat4(1.0f), bodyPosition) 
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
             * translate(mat4(1.0f), wingsPositionL) 
-            * scale(mat4(1.0f), wingsSize);
+            * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -116,13 +125,13 @@ class Bird {
             glBindVertexArray(0);
 
             // WINGS R
-            modelMatrix = 
+            modelMatrix =  
             translate(mat4(1.0f), bodyPosition) 
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
             * translate(mat4(1.0f), wingsPositionR) 
-            * scale(mat4(1.0f), wingsSize);
+            * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -135,7 +144,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), legPositionL) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -148,7 +157,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), legPositionR) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
             glBindVertexArray(sphereVAO);
@@ -244,7 +253,7 @@ class Bird {
             translate(mat4(1.0f), bodyPosition) 
             * scale(mat4(1.0f), scaleFactor) 
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
-            * scale(mat4(1.0f), bodySize * 0.6f);
+            * scale(mat4(1.0f), bodySize * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
             glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
@@ -261,7 +270,7 @@ class Bird {
             * translate(mat4(1.0f), headPosition) 
             * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) 
             * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.7f);
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
             glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
@@ -277,7 +286,7 @@ class Bird {
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
             * translate(mat4(1.0f), wingsPositionL) 
-            * scale(mat4(1.0f), wingsSize * 0.5f);
+            * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
             glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
@@ -293,7 +302,7 @@ class Bird {
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
             * translate(mat4(1.0f), wingsPositionR) 
-            * scale(mat4(1.0f), wingsSize * 0.5f);
+            * scale(mat4(1.0f), wingsSize * 0.18f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
             glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
@@ -308,7 +317,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), legPositionL) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.5f);
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
             glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
@@ -323,7 +332,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), legPositionR) 
-            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.5f);
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
             glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
@@ -426,8 +435,8 @@ class Bird {
          }
       }
       void move() {
-         bodyPosition += vec3(0.05f * cos(radians(yaw)), 0.0f, -0.05f * sin(radians(yaw)));
-         yaw += 1.0f;
+         bodyPosition += vec3(circleDistance * cos(radians(yaw)), 0.0f, -1.0f * circleDistance * sin(radians(yaw)));
+         yaw += circleDirection * circleSpeed;
       }
       void moveWings() {
           if (wingsAngle == -10) {
@@ -459,6 +468,10 @@ class Bird {
       vec3 legPositionL;
       vec3 legPositionR;
       vec3 scaleFactor = vec3(3.0f, 3.0f, 3.0f);
+
+      float circleDistance = 0.05f;
+      float circleSpeed = 1.0f;
+      float circleDirection = 1.0f;
 
       float wingsAngle = 45;
       bool wingsUp = false;

@@ -489,8 +489,8 @@ int main(int argc, char* argv[])
 
     vector<Bird *> birdList;
 
-    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0);
-    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0);
+    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0, 0.05f, 1.0f);
+    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0, 0.05f, 1.0f);
     bird1->setShapeSphere();
     // birdList.push_back(bird1);
     // birdList.push_back(bird2);
@@ -716,6 +716,8 @@ int main(int argc, char* argv[])
             createFloorShadow(shadowShaderProgram, vao);
             for(int i = 0; i < n; i++) {
                 birdList[i]->drawShadow();
+                birdList[i]->moveWings();
+                birdList[i]->move();
             }
             cameraMan.drawShadow();
             NPC1.drawShadow();
@@ -750,6 +752,7 @@ int main(int argc, char* argv[])
             for(int i = 0; i < n; i++) {
                 birdList[i]->draw();
                 birdList[i]->moveWings();
+                birdList[i]->move();
             }
             bird1->draw();
             bird1->move();
@@ -1358,14 +1361,16 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
 
             float angle = randomInRange(cameraHorizontalAngle + 90, cameraHorizontalAngle + 150);
             float yaw = randomInRange(0, 360);
-            float size = randomInRange(0.5, 4.0f);
+            float size = randomInRange(0.5f, 4.0f);
+            float circleDistance = randomInRange(0.0f, 15.0f);
+            float circleSpeed = randomInRange(0.0f, 1.0f);
             // std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
             
             vec3 newPos(rPos * cos(radians(angle)) + cameraPosition.x, yPos, rPos * sin(radians(angle)) + cameraPosition.z);
             // std::cout << "cam - "<< cameraPosition.x << " x - z " << cameraPosition.z << std::endl;
             // std::cout << newPos.x << " x - z " << newPos.z << std::endl;
 
-            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, size, yaw);
+            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, size, yaw, circleDistance, circleSpeed);
             if(i % 2 == 0) {
                 pointer->setShapeSphere();
             }
