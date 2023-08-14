@@ -186,6 +186,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), headPosition) 
+            * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f))
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
             SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
@@ -365,7 +366,7 @@ class Bird {
             * scale(mat4(1.0f), scaleFactor)
             * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), headPosition) 
-            // * rotate(mat4(1.0f), radians(-90.0f), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(90.0f), vec3(1.0f, 0.0f, 0.0f))
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
             SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
             SetUniformVec3(shaderProgram, "customColor", color);
@@ -439,8 +440,14 @@ class Bird {
          }
       }
       void move() {
-         bodyPosition += vec3(circleDistance * cos(radians(yaw)), 0.0f, -1.0f * circleDistance * sin(radians(yaw)));
-         yaw += circleDirection * circleSpeed;
+         if (circleDirection == 1) {
+            bodyPosition += vec3(circleDistance * cos(radians(yaw)), 0.0f, -1.0f * circleDistance * sin(radians(yaw)));
+            yaw -= circleSpeed;
+         }
+         else {
+            bodyPosition += vec3(circleDistance * cos(radians(yaw)), 0.0f, -1.0f * circleDistance * sin(radians(yaw)));
+            yaw += circleSpeed;
+         }
       }
       void moveWings() {
           if (wingsAngle == -10) {

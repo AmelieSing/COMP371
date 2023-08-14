@@ -479,17 +479,16 @@ int main(int argc, char* argv[])
     glUniform1i(texture1Uniform, 5); // Texture unit 5 is now bound to texture1
     
     glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, leavesTextureID);
-    glUniform1i(texture1Uniform, 6); // Texture unit 6 is now bound to texture1
-
-    glActiveTexture(GL_TEXTURE7);
-    // glBindTexture(GL_TEXTURE_2D, birdFurTextureID);
-    // glUniform1i(texture1Uniform, 7); // Texture unit 7 is now bound to texture1
-
-
-    glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, insectTextureID);
     glUniform1i(texture1Uniform, 6);
+
+    glActiveTexture(GL_TEXTURE7);
+    glBindTexture(GL_TEXTURE_2D, leavesTextureID);
+    glUniform1i(texture1Uniform, 7); // Texture unit 6 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE8);
+    // glBindTexture(GL_TEXTURE_2D, birdFurTextureID);
+    // glUniform1i(texture1Uniform, 7); // Texture unit 7 is now bound to texture1
 
     std::cout << cubemapTexture;
 
@@ -816,7 +815,6 @@ int main(int argc, char* argv[])
             bird2->moveWings();
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
-            cameraMan.moveAnimation();
             NPC1.draw();
             NPC1.moveAnimation();
             NPC1.move();
@@ -1046,15 +1044,20 @@ int main(int argc, char* argv[])
         // -------------------------- CAMERA MOVEMENTS ------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
             cameraMan.controlMove(-1.0f * cameraSideVector2 * currentCameraSpeed, dt);
+            cameraMan.moveAnimation();
+
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
             cameraMan.controlMove(1.0f * cameraSideVector2 * currentCameraSpeed, dt);
+            cameraMan.moveAnimation();
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {  // move camera backward
             cameraMan.controlMove(-1.0f * frontVector * currentCameraSpeed, dt);
+            cameraMan.moveAnimation();
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {    // move camera forward
             cameraMan.controlMove(1.0f * frontVector * currentCameraSpeed, dt);
+            cameraMan.moveAnimation();
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { // move camera up
@@ -1519,7 +1522,7 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     for(int i = 0; i < n; i++) {
         vec3 distance = abs(cameraPosition - birdList[i]->getPosition());
         float length = glm::length(distance);  // distance.x
-        if(length < 250.0f) {
+        if(length < 150.0f) {
             numBirdInRange++;
         }
     }
@@ -1528,13 +1531,13 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
         int diff = 5 - numBirdInRange;
         for(int i = 0; i < diff; i++) {
             float yPos = randomInRange(50.0f, 70.0f);
-            float rPos = randomInRange(100.0f, 200.0f);
+            float rPos = randomInRange(50.0f, 100.0f);
 
-            float angle = randomInRange(cameraHorizontalAngle + 90, cameraHorizontalAngle + 150);
+            float angle = randomInRange(0, 360);
             float yaw = randomInRange(0, 360);
             float size = randomInRange(0.5f, 4.0f);
-            float circleDistance = randomInRange(0.0f, 10.0f);
-            float circleSpeed = randomInRange(0.0f, 0.75f);
+            float circleDistance = randomInRange(0.0f, 3.0f);
+            float circleSpeed = randomInRange(0.0f, 0.3f);
             // std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
             
             vec3 newPos(rPos * cos(radians(angle)) + cameraPosition.x, yPos, rPos * sin(radians(angle)) + cameraPosition.z);
