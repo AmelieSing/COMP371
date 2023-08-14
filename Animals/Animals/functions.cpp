@@ -56,3 +56,10 @@ void createFloor(int shaderProgram, int vao, GLint texture1Uniform) {
    glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
    glBindVertexArray(0);
 }
+
+float randomInRange(float lowerBound, float upperBound) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(lowerBound, upperBound);
+    return dist(gen);
+}

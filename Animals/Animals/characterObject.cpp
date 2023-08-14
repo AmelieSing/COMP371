@@ -252,8 +252,8 @@ public:
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
          * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
-         * rotate(mat4(1.0f), radians(-1.0f * legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
+         * rotate(mat4(1.0f), radians(-1.0f * legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), legPositionL)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
@@ -268,8 +268,8 @@ public:
       modelMatrix = scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), headPosition)
          * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
-         * rotate(mat4(1.0f), radians(legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), bodyPosition)
+         * rotate(mat4(1.0f), radians(legsAngle), vec3(1.0f, 0.0f, 0.0f))
          * translate(mat4(1.0f), legPositionR)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
