@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="animalGenerators.cpp" />
+    <ClCompile Include="Ant.cpp" />
     <ClCompile Include="gameObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -144,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animalGenerators.h" />
+    <ClInclude Include="Ant.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Quad.h" />
