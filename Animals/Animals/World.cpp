@@ -43,22 +43,6 @@ void World::Update(float dt) {
         spawnTimer -= SPAWN_PERIOD;
     }
 
-    // TODO 4 - calculate billboard rotation parameters
-    // vec3 originalAxis(0, 0, 1);
-    // vec3 cameraLookAt(-GetCurrentCamera()->GetLookAt());
-    // cameraLookAt.y = 0; //project onto xz plane
-    // cameraLookAt.x *= -1;
-    // cameraLookAt = normalize(cameraLookAt);
-
-    // vec3 billboardRotationAxis(vec3(0,1,0));
-
-    // float billboardRotation = glm::acos(-1 * dot(originalAxis, cameraLookAt)) *
-    // 360 / (2 * pi<float>());
-    //
-    // if (cameraLookAt.x > 0) {
-    //	billboardRotation = 360 - billboardRotation;
-    //}
-
     // Update models
     list<Quad*>::iterator it = models.begin();
     while (it != models.end()) {
@@ -76,32 +60,19 @@ void World::Update(float dt) {
 }
 
 void World::Draw(int textureID, int shaderProgram) {
-   // Renderer::BeginFrame();
-
+  
     // Set shader to use
     glUseProgram(shaderProgram);
 
-    // This looks for the MVP Uniform variable in the Vertex Program
-  //  GLuint VPMatrixLocation = glGetUniformLocation(Renderer::GetShaderProgramID(),
-  //      "ViewProjectionTransform");
-
-    // Send the view projection constants to the shader
- //   mat4 VP = camera[currentCamera]->GetViewProjectionMatrix();
-  //  glUniformMatrix4fv(VPMatrixLocation, 1, GL_FALSE, &VP[0][0]);
-
     // Draw models
-
-    // TODO 3.4 Temporarily disable depth test for transparency
     // Disable depth test
      glDisable(GL_DEPTH_TEST);
     for (list<Quad*>::iterator it = models.begin(); it != models.end(); ++it) {
         (*it)->Draw(textureID, shaderProgram);
     }
-    // TODO 3.4 - Make sure to re-enable it when done!!!
     // Re-enable depth test
      glEnable(GL_DEPTH_TEST);
 
-  //  Renderer::EndFrame();
 }
 
 float GetRandomFloat(float min, float max) {
