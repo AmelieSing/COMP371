@@ -49,7 +49,7 @@ void createFloor(int shaderProgram, int vao, GLint texture1Uniform) {
    SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
    SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
    
-   glUniform1i(texture1Uniform, 6); // Texture unit 2 is now bound to texture1
+   glUniform1i(texture1Uniform, 7); // Texture unit 2 is now bound to texture1
 
    glBindVertexArray(vao);
    glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
