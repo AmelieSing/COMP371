@@ -30,7 +30,8 @@
 
 #include "animalBird.cpp"
 #include "characterObject.cpp"
-// #include "functions.cpp"
+#include "Ant.h"
+//#include "functions.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -282,6 +283,8 @@ int main(int argc, char* argv[])
     GLuint birdFaceTextureID = loadTexture("./Assets/Textures/bird.jpg");
     GLuint birdFurTextureID = loadTexture("./Assets/Textures/birdFur.png");
     GLuint leavesTextureID = loadTexture("./Assets/Textures/leaves.png");
+    GLuint insectTextureID = loadTexture("./Assets/Textures/insect.jpg");
+
 
     std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
     generatorTextures->push_back(furTextureID);
@@ -479,6 +482,10 @@ int main(int argc, char* argv[])
     // glUniform1i(texture1Uniform, 7); // Texture unit 7 is now bound to texture1
 
 
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, insectTextureID);
+    glUniform1i(texture1Uniform, 6);
+
     std::cout << cubemapTexture;
 
 
@@ -501,8 +508,9 @@ int main(int argc, char* argv[])
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
     characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
     characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
-    
 
+    Ant ant1(shaderProgram, shadowShaderProgram, sphere2VAO, vao, texture1Uniform, vec3(20.0f, 1.25f, 2.0f), vertexIndices.size(), insectTextureID, defaultTextureID);
+    
     // For frame time
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
@@ -730,7 +738,7 @@ int main(int argc, char* argv[])
             bird1->drawShadow();
             bird2->drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
-
+            ant1.drawShadow();
         }
 
 
@@ -774,7 +782,8 @@ int main(int argc, char* argv[])
             NPC2.rotateSelf();
             // cameraMan.updatePos(dt);
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-
+            ant1.draw();
+            ant1.moveAntennas();
 
         }
 
