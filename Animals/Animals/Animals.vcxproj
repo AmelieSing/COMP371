@@ -135,11 +135,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="animalFrog.cpp" />
     <ClCompile Include="animalGenerators.cpp" />
     <ClCompile Include="gameObject.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="animalFrog.h" />
     <ClInclude Include="animalGenerators.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="OBJloader.h" />

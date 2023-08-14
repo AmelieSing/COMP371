@@ -35,6 +35,7 @@
 
 #include "gameObject.h"
 #include "animalGenerators.h"
+#include "animalFrog.h"
 
 #include "OBJloader.h" 
 #include "OBJloaderV2.h"
@@ -266,6 +267,7 @@ int main(int argc, char* argv[])
     GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
     GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
     GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+    GLuint frogSkinTextureID = loadTexture("./Assets/Textures/frog.jpg");
 
     std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
     generatorTextures->push_back(furTextureID);
@@ -273,6 +275,9 @@ int main(int argc, char* argv[])
     generatorTextures->push_back(scalesTextureID);
     generatorTextures->push_back(barkTextureID);
 
+    std::vector<GLuint>* frogTextures = new std::vector<GLuint>;
+    frogTextures->push_back(defaultTextureID);
+    frogTextures->push_back(frogSkinTextureID);
 
     //skybox shader
     GLuint skyboxShader = loadSHADER("./Assets/skybox/skyboxvs.glsl",
@@ -562,6 +567,40 @@ int main(int argc, char* argv[])
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+
+    //Frog parameters
+    gameObject frogAnimal;
+    gameObject frogLeftHip_joint; 
+    gameObject frogRightHip_joint;
+    gameObject frogLeftKnee_joint;
+    gameObject frogRightKnee_joint;
+    gameObject frogLeftAnkle_joint;
+    gameObject frogRightAnkle_joint;
+    gameObject frogLeftShoulder_joint;
+    gameObject frogRightShoulder_joint;
+    gameObject frogLeftElbow_joint;
+    gameObject frogRightElbow_joint;
+    gameObject frogLeftWrist_joint;
+    gameObject frogRightWrist_joint;
+    gameObject frogLeftCheek_joint;
+    gameObject frogRightCheek_joint;
+
+    float frogAnimalRotate = 0.0f;
+    generateFrog(sphere2VAO, vertexIndices.size(), frogTextures, frogAnimal, 
+        frogLeftHip_joint, frogRightHip_joint, frogLeftKnee_joint, frogRightKnee_joint, frogLeftAnkle_joint, frogRightAnkle_joint,
+        frogLeftShoulder_joint, frogRightShoulder_joint, frogLeftElbow_joint, frogRightElbow_joint, frogLeftWrist_joint, frogRightWrist_joint,
+        frogLeftCheek_joint, frogRightCheek_joint);
+
+    gameObject frogPivot;
+    frogPivot.addChildObject(&frogAnimal);
+    frogAnimal.setTransformPosition(-10.0f, 6.5f, -8.0f);
+    frogAnimal.setTransformRotation(0.0f, 45.0f, 0.0f);
+
+    float frogCheekMax = 0.7;
+    float frogCheekMin = 0.1;
+    float frogCheekScale = frogCheekMin;
+    bool frogCheekIncrease = true;
+
     
     // Entering Main Loop
 
@@ -693,6 +732,7 @@ int main(int argc, char* argv[])
             bird1.drawShadow();
             bird2.drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
 
         }
 
@@ -729,10 +769,11 @@ int main(int argc, char* argv[])
             NPC1.moveAnimation();
             NPC1.move();
             NPC2.draw();
-            // NPC2.move();
+            NPC2.move();
             NPC2.rotateSelf();
             // cameraMan.updatePos(dt);
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+            frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
 
         }
@@ -796,6 +837,25 @@ int main(int argc, char* argv[])
         rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(wokidooAnimalRotate * 15)));
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
         
+        //Frog animations
+
+
+        frogLeftCheek_joint.setTransformScale(frogCheekScale, frogCheekScale, frogCheekScale);
+        frogRightCheek_joint.setTransformScale(frogCheekScale, frogCheekScale, frogCheekScale);
+
+        if (frogCheekIncrease == true && frogCheekScale <= 0.7) {
+            frogCheekScale += 0.01;
+	        }
+	    else if (frogCheekIncrease == false && frogCheekScale >= 0.1) {
+            frogCheekScale -= 0.01;
+	    }
+	    else if (frogCheekScale > 0.7 && frogCheekIncrease == true) {
+		    frogCheekIncrease = false;
+	    }
+	    else if (frogCheekScale < 0.1 && frogCheekIncrease == false) {
+            frogCheekIncrease = true;
+	    }
+
         //Rotate the world
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate left
         {
