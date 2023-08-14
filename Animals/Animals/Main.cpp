@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <streambuf>
+#include <math.h>
 
 #include <stdlib.h>
 
@@ -25,9 +26,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
 
+#include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
+
 #include "animalBird.cpp"
 #include "characterObject.cpp"
-// #include "functions.cpp"
+#include "Ant.h"
+//#include "functions.cpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -36,6 +40,7 @@
 #include "gameObject.h"
 #include "animalGenerators.h"
 #include "animalFrog.h"
+#include "World.h"
 
 #include "OBJloader.h" 
 #include "OBJloaderV2.h"
@@ -45,6 +50,8 @@ using namespace std;
 
 bool initContext();
 int createCubeVAO();
+int createCubeVAO2();
+
 // int loadSHADER(string vertex_file_path, string fragment_file_path);
 
 GLuint loadTexture(const char* filename);
@@ -55,6 +62,7 @@ void handleInputs();
 
 GLFWwindow* window = NULL;
 
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -256,10 +264,13 @@ int main(int argc, char* argv[])
     // Initialize GLFW and OpenGL version
     if (!initContext()) return -1;
 
+    srand(time(0));
+
     //Loading Shaders
     string shaderPathPrefix = "./Assets/mycoal_shaders/";
     int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
+    int particleShaderProgram = loadSHADER(shaderPathPrefix + "Texture.vertexshader", shaderPathPrefix + "Texture.fragmentshader");
 
     GLuint brickTextureID = loadTexture("./Assets/Textures/brick.jpg");
     GLuint defaultTextureID = loadTexture("./Assets/Textures/white.png");
@@ -267,7 +278,15 @@ int main(int argc, char* argv[])
     GLuint grassTextureID = loadTexture("./Assets/Textures/grass.png");
     GLuint scalesTextureID = loadTexture("./Assets/Textures/scales.png");
     GLuint barkTextureID = loadTexture("./Assets/Textures/bark.jpg");
+    GLuint smokeTextureID = loadTexture("./Assets/Textures/smoke.png");
+    GLuint treeTextureID = loadTexture("./Assets/Textures/tree.png");
+    GLuint bushTextureID = loadTexture("./Assets/Textures/busg.png");
+    GLuint birdFaceTextureID = loadTexture("./Assets/Textures/bird.jpg");
+    GLuint birdFurTextureID = loadTexture("./Assets/Textures/birdFur.png");
+    GLuint leavesTextureID = loadTexture("./Assets/Textures/leaves.png");
+    GLuint insectTextureID = loadTexture("./Assets/Textures/insect.jpg");
     GLuint frogSkinTextureID = loadTexture("./Assets/Textures/frog.jpg");
+
 
     std::vector<GLuint>* generatorTextures = new std::vector<GLuint>;
     generatorTextures->push_back(furTextureID);
@@ -400,8 +419,8 @@ int main(int argc, char* argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // The two calls below tell the texture sampler inside the shader how it should deal with texture coordinates outside of the [0, 1] range. Here we decide to just tile the image.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // Variable storing index to framebuffer used for shadow mapping
     GLuint depth_map_fbo;  // fbo: framebuffer object
@@ -419,7 +438,7 @@ int main(int argc, char* argv[])
     float fov = 70.0f;
     mat4 projectionMatrix = perspective(fov,            // field of view in degrees
         1024.0f / 768.0f,  // aspect ratio
-        0.01f, 100.0f);   // near and far (near > 0)
+        0.01f, 1000.0f);   // near and far (near > 0)
 
     // Set initial view matrix
     mat4 viewMatrix = lookAt(cameraPosition,  // eye
@@ -428,9 +447,13 @@ int main(int argc, char* argv[])
 
     SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
     SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+    mat4 ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+    SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
 
-    // mat4 worldMatrix = mat4(1.0f);
-    int vao = createCubeVAO();
+
+    int vao2 = createCubeVAO();
+    int vao = createCubeVAO2();
+
     GLint shadowMapUniform = glGetUniformLocation(shaderProgram, "shadow_map");
     glUniform1i(shadowMapUniform, 0); // Texture unit 1 is now bound to texture1
 
@@ -440,12 +463,33 @@ int main(int argc, char* argv[])
     glUniform1i(texture1Uniform, 1); // Texture unit 1 is now bound to texture1
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, brickTextureID);
+    glBindTexture(GL_TEXTURE_2D, birdFurTextureID);
     glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, birdFaceTextureID);
+    glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     glUniform1i(glGetUniformLocation(skyboxShader, "skybox"), 4);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, smokeTextureID);
+    glUniform1i(texture1Uniform, 5); // Texture unit 5 is now bound to texture1
+    
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, leavesTextureID);
+    glUniform1i(texture1Uniform, 6); // Texture unit 6 is now bound to texture1
+
+    glActiveTexture(GL_TEXTURE7);
+    // glBindTexture(GL_TEXTURE_2D, birdFurTextureID);
+    // glUniform1i(texture1Uniform, 7); // Texture unit 7 is now bound to texture1
+
+
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, insectTextureID);
+    glUniform1i(texture1Uniform, 6);
 
     std::cout << cubemapTexture;
 
@@ -459,20 +503,18 @@ int main(int argc, char* argv[])
     int sphere2Vertices;
     GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
 
+    vector<Bird *> birdList;
 
-    // glActiveTexture(GL_TEXTURE3);
-    // glBindTexture(GL_TEXTURE_2D, tennistTextureID);
-    // glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
-
-    // glActiveTexture(GL_TEXTURE4);
-    // glBindTexture(GL_TEXTURE_2D, steelTextureID);
-    // glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
-
-    Bird bird1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, glm::vec3(5.0f, 5.0f, 0.0f));
-    Bird bird2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, glm::vec3(-5.0f, 5.0f, 0.0f));
+    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0, 0.05f, 1.0f);
+    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0, 0.05f, 1.0f);
+    bird1->setShapeSphere();
+    // birdList.push_back(bird1);
+    // birdList.push_back(bird2);
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
     characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
     characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
+
+    Ant ant1(shaderProgram, shadowShaderProgram, sphere2VAO, vao, texture1Uniform, vec3(20.0f, 1.25f, 2.0f), vertexIndices.size(), insectTextureID, defaultTextureID);
     
     // For frame time
     float lastFrameTime = glfwGetTime();
@@ -593,8 +635,9 @@ int main(int argc, char* argv[])
 
     gameObject frogPivot;
     frogPivot.addChildObject(&frogAnimal);
-    frogAnimal.setTransformPosition(-10.0f, 6.5f, -8.0f);
+    frogAnimal.setTransformPosition(-12.0f, 3.5f, 20.0f);
     frogAnimal.setTransformRotation(0.0f, 45.0f, 0.0f);
+    frogAnimal.setTransformScale(0.6f,0.6f,0.6f);
 
     float frogCheekMax = 0.7;
     float frogCheekMin = 0.1;
@@ -669,8 +712,9 @@ int main(int argc, char* argv[])
     glLinkProgram(planeshaderProgram);
 
     bool showTitle = true;
-    GLuint hRelease = GLFW_RELEASE;
-    
+    World world;
+    GLuint hRelease = GLFW_RELEASE;   
+     
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -712,8 +756,7 @@ int main(int argc, char* argv[])
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
-
-        
+        int n = birdList.size();
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -723,19 +766,23 @@ int main(int argc, char* argv[])
             // Clear depth data on the framebuffer
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            createFloorShadow(shadowShaderProgram, vao);
-
+            createFloorShadow(shadowShaderProgram, vao2);
+            for(int i = 0; i < n; i++) {
+                birdList[i]->drawShadow();
+                birdList[i]->moveWings();
+                birdList[i]->move();
+            }
             cameraMan.drawShadow();
             NPC1.drawShadow();
             NPC2.drawShadow();
 
-            bird1.drawShadow();
-            bird2.drawShadow();
+            bird1->drawShadow();
+            bird2->drawShadow();
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
 
+            ant1.drawShadow();
         }
-
 
 
         // ----------------------------------------------------------------------------
@@ -753,15 +800,20 @@ int main(int argc, char* argv[])
             // Clear color and depth data on framebuffer
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // -------------------------- CLAY GROUND ------------------------------
-            createFloor(shaderProgram, vao, texture1Uniform);
+            createFloor(shaderProgram, vao2, texture1Uniform);
         
         // ------------------- 
-
-            bird1.draw();
-            bird1.move();
-            bird1.moveWings();
-            bird2.draw();
-            bird2.moveWings();
+            
+            for(int i = 0; i < n; i++) {
+                birdList[i]->draw();
+                birdList[i]->moveWings();
+                birdList[i]->move();
+            }
+            bird1->draw();
+            bird1->move();
+            bird1->moveWings();
+            bird2->draw();
+            bird2->moveWings();
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
             cameraMan.moveAnimation();
@@ -775,6 +827,8 @@ int main(int argc, char* argv[])
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
+            ant1.draw();
+            ant1.moveAntennas();
 
         }
 
@@ -810,14 +864,30 @@ int main(int argc, char* argv[])
         glUniform1i(textureLocation, 5); // Use texture unit 5
         glm::mat4 model = glm::mat4(1.0f);
         model = translate(mat4(1.0f), glm::vec3(0.5f, 0.75f, 0.0f));
-
-        // Get the location of the "model" uniform in the shader
         GLint modelLoc = glGetUniformLocation(planeshaderProgram, "model");
-
-        // Pass the model matrix to the shader
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         if(showTitle)
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+        //trees!!
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, treeTextureID);
+        glUniform1i(textureLocation, 5); 
+        model = projectionMatrix*viewMatrix*translate(mat4(1.0f), glm::vec3(-15.5f, 10.0f, -17.0f))*scale(mat4(1),vec3(20,20,20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(17.5f, 10.0f, -40.0f)) * scale(mat4(1), vec3(20, 30, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, bushTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(-20.5f, 5.0f, -10.0f)) * scale(mat4(1), vec3(30, 10, 10));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        
+        
         glBindVertexArray(0);
         glUseProgram(0);
         
@@ -837,6 +907,11 @@ int main(int argc, char* argv[])
         rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(wokidooAnimalRotate * 15)));
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
         
+        world.Update(dt);
+        world.Draw(smokeTextureID, particleShaderProgram);
+        glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+
+
         //Frog animations
 
 
@@ -962,6 +1037,9 @@ int main(int argc, char* argv[])
                 0.01f, 100.0f);   // near and far (near > 0)
 
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
+            ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+            SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
             
             lastMousePosY = mousePosY;
         }
@@ -995,11 +1073,15 @@ int main(int argc, char* argv[])
         cameraMan.updatePos(dt);
 
         cameraPosition = cameraMan.getHeadPosition();
+        generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
         SetUniformMat4(shaderProgram, "viewMatrix", viewMatrix);
+        ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
+        SetUniformMat4(particleShaderProgram, "ViewProjectionTransform", ViewProjectionTransformMatrix);
+
 
     }
 
@@ -1241,52 +1323,52 @@ int createCubeVAO() {
     // Cube model
     const TexturedColoredVertex vertexArray[] = {  // position,                            normals
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
 
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)), // far - blue
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 15.0f)), // far - blue
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 15.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 15.0f)), // bottom - turquoise
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 15.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 15.0f)), // near - green
     TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 5.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)), // right - purple
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 0.0f)),
 
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 15.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)), // top - yellow
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 15.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 15.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 5.0f))
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 15.0f))
     };
         
     // Create a vertex array
@@ -1330,4 +1412,142 @@ int createCubeVAO() {
 
     
     return vertexBufferObject;
+}
+int createCubeVAO2() {
+    // Cube model
+    const TexturedColoredVertex vertexArray[] = {  // position,                            normals
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 1.0f)), // far - blue
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(1.0f, 1.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f))
+    };
+        
+    // Create a vertex array
+    GLuint vertexArrayObject;
+    glGenVertexArrays(1, &vertexArrayObject);
+    glBindVertexArray(vertexArrayObject);
+     
+    // Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
+    GLuint vertexBufferObject;
+    glGenBuffers(1, &vertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), vertexArray, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
+        3,                   // size
+        GL_FLOAT,            // type
+        GL_FALSE,            // normalized?
+        sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
+        (void*)0             // array buffer offset
+    );
+    glEnableVertexAttribArray(0);
+
+
+    glVertexAttribPointer(1,                            // attribute 1 matches aNormals in Vertex Shader
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
+    );
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)(2 * sizeof(vec3))      // uv is offseted by 2 vec3 (comes after position and color)
+    );
+    glEnableVertexAttribArray(2);
+
+    
+    return vertexBufferObject;
+}
+
+
+
+void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
+    int n = birdList.size();
+    int numBirdInRange = 0;
+    if(n > 25) {
+        return;
+    }
+    for(int i = 0; i < n; i++) {
+        vec3 distance = abs(cameraPosition - birdList[i]->getPosition());
+        float length = glm::length(distance);  // distance.x
+        if(length < 250.0f) {
+            numBirdInRange++;
+        }
+    }
+
+    if(numBirdInRange < 4) {
+        int diff = 5 - numBirdInRange;
+        for(int i = 0; i < diff; i++) {
+            float yPos = randomInRange(50.0f, 70.0f);
+            float rPos = randomInRange(100.0f, 200.0f);
+
+            float angle = randomInRange(cameraHorizontalAngle + 90, cameraHorizontalAngle + 150);
+            float yaw = randomInRange(0, 360);
+            float size = randomInRange(0.5f, 4.0f);
+            float circleDistance = randomInRange(0.0f, 10.0f);
+            float circleSpeed = randomInRange(0.0f, 0.75f);
+            // std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
+            
+            vec3 newPos(rPos * cos(radians(angle)) + cameraPosition.x, yPos, rPos * sin(radians(angle)) + cameraPosition.z);
+            // std::cout << "cam - "<< cameraPosition.x << " x - z " << cameraPosition.z << std::endl;
+            // std::cout << newPos.x << " x - z " << newPos.z << std::endl;
+
+            Bird* pointer = new Bird(shaderProgram, shaderShadowProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, newPos, size, yaw, circleDistance, circleSpeed);
+            if(i % 2 == 0) {
+                pointer->setShapeSphere();
+            }
+            birdList.push_back(pointer);
+            
+        }
+    }
+
 }

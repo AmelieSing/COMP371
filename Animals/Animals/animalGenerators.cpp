@@ -4,8 +4,8 @@
 void generateAnimal(GLuint VAO,int vertCount, std::vector<GLuint>* textures, gameObject& animal, gameObject& neck_joint, gameObject& leftHip_joint, gameObject& rightHip_joint, gameObject& leftShoulder_joint, gameObject& rightShoulder_joint)
 {
 	//generate a seed
-	std::time_t t;
-	std::srand((unsigned)std::time(&t));
+	time_t t;
+	std::srand((unsigned)time(&t));
 
 	//Remove and delete all old data
 	animal.setVAO(NULL);

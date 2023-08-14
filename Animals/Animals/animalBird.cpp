@@ -42,17 +42,32 @@ class Bird {
                               1.0f * bodySize.z / 3);
          modelMatrix = mat4(1.0f);
       }
-      Bird(int shaderProgram, int shaderShadowProgram, int vao, GLint texture1Uniform, vec3 bodyPos   ) {
+      Bird(int shaderProgram, int shaderShadowProgram, int vao, int sphereVAO, int sphereVertices, GLint texture1Uniform, vec3 bodyPos, float size, float yaw, float circleDistance, float circleSpeed) {
          this->shaderProgram = shaderProgram;
          this->vao = vao;
          this->texture1Uniform = texture1Uniform;
          this-> shaderShadowProgram = shaderShadowProgram;
+         this->scaleFactor = scaleFactor * size;
+         this->sphereVAO = sphereVAO;
+         this->sphereVertices = sphereVertices;
+         this->yaw = yaw;
+         this->circleDistance = circleDistance;
+         this->circleSpeed = circleSpeed;
+         float colorR = randomInRange(0.5f, 1.0f);
+         float colorG = randomInRange(0.5f, 1.0f);
+         float colorB = randomInRange(0.5f, 1.0f);
+         this->color = vec3(colorR, colorG, colorB);
+         if(randomInRange(0.0f, 1.0f) > 0.5f) {
+            circleDirection = 1.0f;
+         } else {
+            circleDirection = -1.0f;
+         }
 
          bodyPosition = bodyPos;
          bodySize = vec3(2.0f, 0.5f, 1.0f);
          headPosition = vec3( bodySize.x/2,
                               bodySize.y/2,
-                              bodyPosition.z);
+                              0.0f);
          wingsSize = vec3( bodySize.x/3, 
                            bodySize.y/5, 
                            bodySize.x * 0.9f);
@@ -71,170 +86,361 @@ class Bird {
          modelMatrix = mat4(1.0f);
       }
       void drawShadow() {
-         // BODY
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition) 
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
-         * scale(mat4(1.0f), bodySize);
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+         if(shapeSphere) {
+            // BODY
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor) 
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
+            * scale(mat4(1.0f), bodySize * 0.2f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // HEAD
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), headPosition) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+            // HEAD
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), headPosition) 
+            * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.2f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // WINGS L
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
-         * translate(mat4(1.0f), wingsPositionL) 
-         * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+            // WINGS L
+            modelMatrix =
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionL) 
+            * scale(mat4(1.0f), wingsSize * 0.18f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // WINGS R
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
-         * translate(mat4(1.0f), wingsPositionR) 
-         * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+            // WINGS R
+            modelMatrix =  
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionR) 
+            * scale(mat4(1.0f), wingsSize * 0.18f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // LEGS L
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), legPositionL) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+            // LEGS L
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionL) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // LEGS R
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), legPositionR) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+            // LEGS R
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionR) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+         } else {
+            // BODY
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
+            * scale(mat4(1.0f), bodySize);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // HEAD
+            modelMatrix =
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), headPosition) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // WINGS L
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionL) 
+            * scale(mat4(1.0f), wingsSize);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // WINGS R
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionR) 
+            * scale(mat4(1.0f), wingsSize);
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // LEGS L
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionL) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // LEGS R
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionR) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            SetUniformMat4(shaderShadowProgram, "worldMatrix", modelMatrix);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+         }
       }
 
       void draw() {
          glUseProgram(shaderProgram);
-         // BODY
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition) 
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
-         * scale(mat4(1.0f), bodySize);
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
-         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+         if(shapeSphere) {
+            // BODY
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor) 
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
+            * scale(mat4(1.0f), bodySize * 0.2f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // HEAD
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), headPosition) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 0.0f));
-         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            // HEAD
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), headPosition) 
+            * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f) * 0.2f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // WINGS L
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
-         * translate(mat4(1.0f), wingsPositionL) 
-         * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            // WINGS L
+            modelMatrix =
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionL) 
+            * scale(mat4(1.0f), wingsSize * 0.18f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // WINGS R
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
-         * translate(mat4(1.0f), wingsPositionR) 
-         * scale(mat4(1.0f), wingsSize);
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
-         glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+            // WINGS R
+            modelMatrix =  
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionR) 
+            * scale(mat4(1.0f), wingsSize * 0.18f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // LEGS L
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), legPositionL) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 0.0f, 1.0f));
-         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            // LEGS L
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionL) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
-         // LEGS R
-         modelMatrix = scale(mat4(1.0f), scaleFactor) 
-         * translate(mat4(1.0f), bodyPosition)
-         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
-         * translate(mat4(1.0f), legPositionR) 
-         * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
-         SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-         SetUniformVec3(shaderProgram, "customColor", vec3(0.0f, 1.0f, 1.0f));
-         glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+            // LEGS R
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionR) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f) * 0.2f);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
 
-         glBindVertexArray(vao);
-         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-         glBindVertexArray(0);
+            glBindVertexArray(sphereVAO);
+            glDrawElements(GL_TRIANGLES, sphereVertices, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+         } else {
+            // BODY
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor) 
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
+            * scale(mat4(1.0f), bodySize);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // HEAD
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), headPosition) 
+            // * rotate(mat4(1.0f), radians(-90.0f), vec3(0.0f, 1.0f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.5f, 0.5f));
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // WINGS L
+            modelMatrix =
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(-1.0f * wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionL) 
+            * scale(mat4(1.0f), wingsSize);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // WINGS R
+            modelMatrix =  
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * rotate(mat4(1.0f), radians(wingsAngle), vec3(1.0f, 0.0f, 0.0f))
+            * translate(mat4(1.0f), wingsPositionR) 
+            * scale(mat4(1.0f), wingsSize);
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // LEGS L
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionL) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
+            // LEGS R
+            modelMatrix = 
+            translate(mat4(1.0f), bodyPosition) 
+            * scale(mat4(1.0f), scaleFactor)
+            * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), legPositionR) 
+            * scale(mat4(1.0f), vec3(0.5f, 0.2f, 0.2f));
+            SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
+            SetUniformVec3(shaderProgram, "customColor", color);
+            glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+         }
       }
       void move() {
-         bodyPosition += vec3(0.05f * cos(radians(yaw)), 0.0f, -0.05f * sin(radians(yaw)));
-         yaw += 1.0f;
+         bodyPosition += vec3(circleDistance * cos(radians(yaw)), 0.0f, -1.0f * circleDistance * sin(radians(yaw)));
+         yaw += circleDirection * circleSpeed;
       }
       void moveWings() {
           if (wingsAngle == -10) {
@@ -250,6 +456,12 @@ class Bird {
               wingsAngle--;
           }
       }
+      vec3 getPosition() {
+         return bodyPosition;
+      }
+      void setShapeSphere() {
+         shapeSphere = true;
+      }
    private:
       vec3 bodyPosition;
       vec3 bodySize;
@@ -261,6 +473,12 @@ class Bird {
       vec3 legPositionR;
       vec3 scaleFactor = vec3(3.0f, 3.0f, 3.0f);
 
+      vec3 color = vec3(1.0f, 1.0f, 1.0f);
+
+      float circleDistance = 0.05f;
+      float circleSpeed = 1.0f;
+      float circleDirection = 1.0f;
+
       float wingsAngle = 45;
       bool wingsUp = false;
       float yaw = 0;
@@ -269,6 +487,11 @@ class Bird {
 
       mat4 modelMatrix;
       int vao;
+      int sphereVAO;
+      int sphereVertices;
+
+      bool shapeSphere = false;
+
       int shaderProgram;
       int shaderShadowProgram;
       GLint texture1Uniform;
