@@ -506,14 +506,7 @@ int main(int argc, char* argv[])
     vector<Bird *> birdList;
     vector<characterObject*> humanList;
 
-    Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0, 0.05f, 1.0f);
-    Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0, 0.05f, 1.0f);
-    bird1->setShapeSphere();
-    // birdList.push_back(bird1);
-    // birdList.push_back(bird2);
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
-    //characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
-    //characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
 
     Ant ant1(shaderProgram, shadowShaderProgram, sphere2VAO, vao, texture1Uniform, vec3(20.0f, 1.25f, 2.0f), vertexIndices.size(), insectTextureID, defaultTextureID);
     
@@ -561,7 +554,7 @@ int main(int argc, char* argv[])
         tail.setVertCount(36);
         tail.setTransformScale(0.6f, 2.0f, 4.0f);
         tail.setTransformPosition(0.0f, 1.0f, -2.2f);
-        tail.setTransformRotation(45.0f, 0.0f, 0.0f);
+        tail.setTransformRotation(25.0f, 0.0f, 0.0f);
 
         gameObject leftWing;
         leftShoulder_joint.addChildObject(&leftWing);
@@ -637,7 +630,7 @@ int main(int argc, char* argv[])
     gameObject frogPivot;
     frogPivot.addChildObject(&frogAnimal);
     frogAnimal.setTransformPosition(-12.0f, 3.5f, 20.0f);
-    frogAnimal.setTransformRotation(0.0f, 45.0f, 0.0f);
+    frogAnimal.setTransformRotation(0.0f, 25.0f, 0.0f);
     frogAnimal.setTransformScale(0.6f,0.6f,0.6f);
 
     float frogCheekMax = 0.7;
@@ -776,13 +769,12 @@ int main(int argc, char* argv[])
             }
             for (int i = 0; i < nHuman; i++) {
                humanList[i]->drawShadow();
+               if (i % 2 == 0) {
+                  humanList[i]->moveAnimation();
+               }
             }
             cameraMan.drawShadow();
-            //NPC1.drawShadow();
-            //NPC2.drawShadow();
 
-            /*bird1->drawShadow();
-            bird2->drawShadow();*/
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
 
@@ -816,21 +808,14 @@ int main(int argc, char* argv[])
             }
             for (int i = 0; i < nHuman; i++) {
                humanList[i]->draw();
+               if (i % 2 == 0) {
+                  humanList[i]->moveAnimation();
+               }
             }
-            /*bird1->draw();
-            bird1->move();
-            bird1->moveWings();
-            bird2->draw();
-            bird2->moveWings();*/
+
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
-            /*NPC1.draw();
-            NPC1.moveAnimation();
-            NPC1.move();
-            NPC2.draw();
-            NPC2.move();
-            NPC2.rotateSelf();*/
-            // cameraMan.updatePos(dt);
+
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
 
@@ -1336,52 +1321,52 @@ int createCubeVAO() {
     // Cube model
     const TexturedColoredVertex vertexArray[] = {  // position,                            normals
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 15.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 105.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(105.0f, 105.0f)),
 
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(105.0f, 105.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(105.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 15.0f)), // far - blue
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(105.0f, 105.0f)), // far - blue
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 15.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 105.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 15.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(105.0f, 105.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(105.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 15.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(105.0f, 105.0f)), // bottom - turquoise
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(105.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(15.0f, 15.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(105.0f, 105.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 105.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 15.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 105.0f)), // near - green
     TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(105.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 15.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 15.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(105.0f, 105.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 105.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(105.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(105.0f, 105.0f)), // right - purple
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(105.0f, 0.0f)),
 
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(15.0f, 15.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(105.0f, 105.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 105.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 15.0f)), // top - yellow
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(105.0f, 105.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(105.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(15.0f, 15.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(105.0f, 105.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 15.0f))
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 105.0f))
     };
         
     // Create a vertex array
@@ -1530,7 +1515,7 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     for(int i = 0; i < n; i++) {
         vec3 distance = abs(cameraPosition - birdList[i]->getPosition());
         float length = glm::length(distance);  // distance.x
-        if(length < 150.0f) {
+        if(length < 300.0f) {
             numBirdInRange++;
         }
     }
@@ -1538,8 +1523,8 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     if(numBirdInRange < 4) {
         int diff = 4 - numBirdInRange;
         for(int i = 0; i < diff; i++) {
-            float yPos = randomInRange(50.0f, 70.0f);
-            float rPos = randomInRange(100.0f, 125.0f);
+            float yPos = randomInRange(50.0f, 150.0f);
+            float rPos = randomInRange(150.0f, 200.0f);
 
             float angle = randomInRange(0, 360);
             float yaw = randomInRange(0, 360);
@@ -1569,7 +1554,7 @@ void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, flo
    for (int i = 0; i < n; i++) {
       vec3 distance = abs(cameraPosition - humanList[i]->getHeadPosition());
       float length = glm::length(distance); 
-      if (length < 100.0f) {
+      if (length < 200.0f) {
          numHumanInRange++;
       }
    }
@@ -1578,7 +1563,7 @@ void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, flo
       int diff = 5 - numHumanInRange;
       for (int i = 0; i < diff; i++) {
 
-         float height = randomInRange(5.0f, 25.0f);
+         float height = randomInRange(10.0f, 40.0f) - 5.0f;
          float xPos = randomInRange(-100.0f, 100.0f);
          float zPos = randomInRange(-100.0f, 100.0f);
          std::cout << height << " x - z " << xPos << std::endl;

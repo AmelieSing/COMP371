@@ -294,9 +294,9 @@ public:
          legsUp = false;
       }
       if(legsUp) {
-         legsAngle++;
+         legsAngle += 0.25;
       } else {
-         legsAngle--;
+         legsAngle -= 0.25;
       }
       if(armsAngle == -25) {
          armsUp = true;
@@ -304,9 +304,9 @@ public:
          armsUp = false;
       }
       if(armsUp) {
-         armsAngle++;
+         armsAngle += 0.25;
       } else {
-         armsAngle--;
+         armsAngle -= 0.25;
       }
    }
    void move() {
