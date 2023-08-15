@@ -86,10 +86,11 @@ const char* fragmentShaderSource = R"(
     out vec4 FragColor;
 
     uniform sampler2D ourTexture;
+    uniform vec4 colorAdd;
 
     void main()
     {
-        vec4 texColor = texture(ourTexture, TexCoord);
+        vec4 texColor = texture(ourTexture, TexCoord)*colorAdd;
         
         if (texColor.a < 1.0)
         {
@@ -708,6 +709,21 @@ int main(int argc, char* argv[])
     bool showTitle = true;
     World world;
     GLuint hRelease = GLFW_RELEASE;   
+
+    //random skybox color
+    GLuint skyColorLocation = glGetUniformLocation(skyboxShader, "colorMultiplier");
+    vec4 newColor = vec4(randomInRange(-1.0f, 1.0f), randomInRange(-1.0f, 1.0f), randomInRange(-1.0f, 1.0f), 1.0f);
+    glUseProgram(skyboxShader);
+    glUniform4fv(skyColorLocation, 1, value_ptr(newColor));
+    //random environment color
+    GLuint planeColorLocation = glGetUniformLocation(planeshaderProgram, "colorAdd");
+    vec4 newplaneColor = vec4(randomInRange(-0.0f, 1.0f), randomInRange(-0.0f, 1.0f), randomInRange(-1.0f, 1.0f), 1.0f);
+    glUseProgram(planeshaderProgram);
+    glUniform4fv(planeColorLocation, 1, value_ptr(newplaneColor));
+
+    vec3 randomTreePos1 = vec3(randomInRange(-20.0f,20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+    vec3 randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+    vec3 randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
      
     while (!glfwWindowShouldClose(window))
     {
@@ -878,6 +894,21 @@ int main(int argc, char* argv[])
         model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(-20.5f, 5.0f, -10.0f)) * scale(mat4(1), vec3(30, 10, 10));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, treeTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos1) * scale(mat4(1), vec3(20, 20, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos2) * scale(mat4(1), vec3(20, 30, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, bushTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos3) * scale(mat4(1), vec3(30, 10, 10));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         
         
         glBindVertexArray(0);
@@ -951,6 +982,26 @@ int main(int argc, char* argv[])
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // generate animal
         {
             generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures, wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) // generate animal
+        {
+            //random skybox color
+            GLuint skyColorLocation = glGetUniformLocation(skyboxShader, "colorMultiplier");
+            vec4 newColor = vec4(randomInRange(-1.0f, 1.0f), randomInRange(-1.0f, 1.0f), randomInRange(-1.0f, 1.0f), 1.0f);
+            glUseProgram(skyboxShader);
+            glUniform4fv(skyColorLocation, 1, value_ptr(newColor));
+
+            GLuint planeColorLocation = glGetUniformLocation(planeshaderProgram, "colorAdd");
+            vec4 newplaneColor = vec4(randomInRange(-0.0f, 1.0f), randomInRange(-0.0f, 1.0f), randomInRange(-1.0f, 1.0f), 1.0f);
+            glUseProgram(planeshaderProgram);
+            glUniform4fv(planeColorLocation, 1, value_ptr(newplaneColor));
+
+            randomTreePos1 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+            randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+            randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+
+
         }
         if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && hRelease == GLFW_RELEASE) //toggle title 
         {
@@ -1272,7 +1323,6 @@ const TexturedColoredVertex texturedCubeVertexArray[] = {  // position,         
     TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f))
 };
 
-
 int createTexturedCubeVertexArrayObject()
 {
     // Create a vertex array
@@ -1316,7 +1366,6 @@ int createTexturedCubeVertexArrayObject()
 
     return vertexArrayObject;
 }
-
 int createCubeVAO() {
     // Cube model
     const TexturedColoredVertex vertexArray[] = {  // position,                            normals
@@ -1505,8 +1554,6 @@ int createCubeVAO2() {
     
     return vertexBufferObject;
 }
-
-
 
 void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
     int n = birdList.size();

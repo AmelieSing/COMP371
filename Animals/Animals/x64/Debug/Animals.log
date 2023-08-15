@@ -1,10 +1,43 @@
 ﻿  Main.cpp
-C:\Users\Emilie\source\repos\COMP371\Animals\Animals\Main.cpp(114,25): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
-C:\Users\Emilie\source\repos\COMP371\Animals\Animals\Main.cpp(142,18): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
-C:\Users\Emilie\source\repos\COMP371\Animals\Animals\Main.cpp(257,62): warning C4244: '-=' : conversion de 'double' en 'float', perte possible de données
-C:\Users\Emilie\source\repos\COMP371\Animals\Animals\Main.cpp(276,60): warning C4244: '-=' : conversion de 'double' en 'float', perte possible de données
-C:\Users\Emilie\source\repos\COMP371\Animals\Animals\Main.cpp(391,16): warning C4477: 'printf' : la chaîne de format '%s' nécessite un argument de type 'char *', mais l'argument variadique 1 est de type 'std::string'
-glew32s.lib(glew.obj) : warning LNK4099: PDB '' n'a pu être trouvé avec 'glew32s.lib(glew.obj)' ou sur '' ; l'objet sera lié sans informations de débogage
-LINK : warning LNK4098: conflit entre la bibliothèque par défaut 'LIBCMT' et les autres bibliothèques ; utilisez /NODEFAULTLIB:library
-LINK : warning LNK4098: conflit entre la bibliothèque par défaut 'MSVCRT' et les autres bibliothèques ; utilisez /NODEFAULTLIB:library
-  Animals.vcxproj -> C:\Users\Emilie\source\repos\COMP371\Animals\x64\Debug\Animals.exe
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\characterObject.cpp(392,18): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\shaderloader.h(25,10): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\gameObject.h(42,53): warning C4244: '=': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloader.h(32,28): warning C4473: 'fscanf_s' : not enough arguments passed for format string
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloader.h(32,28): message : placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloader.h(32,28): message : the missing variadic argument 2 is required by format string '%s'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloader.h(32,28): message : this argument is used as a buffer size
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloaderV2.h(31,28): warning C4473: 'fscanf_s' : not enough arguments passed for format string
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloaderV2.h(31,28): message : placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloaderV2.h(31,28): message : the missing variadic argument 2 is required by format string '%s'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\OBJloaderV2.h(31,28): message : this argument is used as a buffer size
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(219,34): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(260,39): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(269,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(512,165): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(515,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(539,169): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(629,50): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(637,29): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(638,29): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(730,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(769,36): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(770,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(923,36): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(945,35): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(948,35): warning C4305: '-=': truncation from 'double' to 'float'
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(984,178): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(1040,62): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(1041,60): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(1559,28): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(1598,28): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\functions.cpp(31,62): warning C4244: 'argument': conversion from 'T' to 'GLint', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\Animals\Main.cpp(749): message : see reference to function template instantiation 'void SetUniform1Value<float>(GLuint,const char *,T)' being compiled
+          with
+          [
+              T=float
+          ]
+  Animals.vcxproj -> C:\Users\gross\OneDrive\Documents\GitHub\COMP371\Animals\x64\Debug\Animals.exe
