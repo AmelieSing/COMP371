@@ -27,12 +27,18 @@ public:
       this->texture1Uniform = texture1Uniform;
       this->shaderShadowProgram = shaderShadowProgram;
       this->height = height;
+      this->bodyAngleY = randomInRange(0.0f, 360.0f);
 
-      headPosition = vec3(xPos, height, zPos);
+      legColor = vec3(randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f));
+      armColor = vec3(randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f));
+      bodyColor = vec3(randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f));
+      headColor = vec3(randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f), randomInRange(0.0f, 1.0f));
+
+      headPosition = vec3(xPos, height*0.8, zPos);
       headSize = vec3(0.1f * height, 0.125f * height, 0.1f * height);
 
       bodySize = vec3(2.5f * headSize.x,
-         3.2f * headSize.y,
+         3.0f * headSize.y,
          0.8 * headSize.z
       );
       bodyPosition = vec3(0.0f,
@@ -40,27 +46,27 @@ public:
          0.0f
       );
       armSize = vec3(0.4f * bodySize.x,
-         3.7f * headSize.y,
+         3.5f * headSize.y,
          bodySize.z
       );
       armPositionL = vec3(-1.0f * (bodySize.x * 0.5f + armSize.x * 0.5f),
          -1.0f * (0.25f * headSize.y),
          0.0f
       );
-      armPositionR = vec3( 1.0f * (bodySize.x * 0.5f + armSize.x * 0.5f),
-         -1.0f *  (0.25f * headSize.y),
+      armPositionR = vec3(1.0f * (bodySize.x * 0.5f + armSize.x * 0.5f),
+         -1.0f * (0.25f * headSize.y),
          0.0f
       );
       legSize = vec3(0.45f * bodySize.x,
-         4.0f * headSize.y,
+         4.5f * headSize.y,
          bodySize.z
       );
-      legPositionL = vec3(-1.0f *  (bodySize.x * 0.25f),
-         -0.9f * (bodySize.y * 0.5f + legSize.y * 0.5f),
+      legPositionL = vec3(-1.0f * (bodySize.x * 0.25f),
+         -0.9f * (bodySize.y * 0.5f + legSize.y * 0.55f),
          0.0f
       );
       legPositionR = vec3(1.0f * (bodySize.x * 0.25f),
-         -0.9f * (bodySize.y * 0.5f + legSize.y * 0.5f),
+         -0.9f * (bodySize.y * 0.5f + legSize.y * 0.55f),
          0.0f
       );
       modelMatrix = mat4(1.0f);
@@ -195,7 +201,7 @@ public:
          * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * scale(mat4(1.0f), headSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
+      SetUniformVec3(shaderProgram, "customColor", headColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -209,7 +215,7 @@ public:
          * rotate(mat4(1.0f), radians(bodyAngleY), vec3(0.0f, 1.0f, 0.0f))
          * scale(mat4(1.0f), bodySize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 1.0f));
+      SetUniformVec3(shaderProgram, "customColor", bodyColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -225,7 +231,7 @@ public:
          * translate(mat4(1.0f), armPositionL)
          * scale(mat4(1.0f), armSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
+      SetUniformVec3(shaderProgram, "customColor", armColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -241,7 +247,7 @@ public:
          * translate(mat4(1.0f), armPositionR)
          * scale(mat4(1.0f), armSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
+      SetUniformVec3(shaderProgram, "customColor", armColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -257,7 +263,7 @@ public:
          * translate(mat4(1.0f), legPositionL)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
+      SetUniformVec3(shaderProgram, "customColor", legColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -273,7 +279,7 @@ public:
          * translate(mat4(1.0f), legPositionR)
          * scale(mat4(1.0f), legSize);
       SetUniformMat4(shaderProgram, "worldMatrix", modelMatrix);
-      SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 0.0f, 0.0f));
+      SetUniformVec3(shaderProgram, "customColor", legColor);
       glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
 
       glBindVertexArray(vao);
@@ -288,9 +294,9 @@ public:
          legsUp = false;
       }
       if(legsUp) {
-         legsAngle++;
+         legsAngle += 0.25;
       } else {
-         legsAngle--;
+         legsAngle -= 0.25;
       }
       if(armsAngle == -25) {
          armsUp = true;
@@ -298,9 +304,9 @@ public:
          armsUp = false;
       }
       if(armsUp) {
-         armsAngle++;
+         armsAngle += 0.25;
       } else {
-         armsAngle--;
+         armsAngle -= 0.25;
       }
    }
    void move() {
@@ -374,6 +380,11 @@ private:
    vec3 legSize;
    vec3 legPositionL;
    vec3 legPositionR;
+
+   vec3 legColor = vec3(0.7f, 0.5f, 0.3f);
+   vec3 bodyColor = vec3(0.3f, 0.7f, 0.5f);
+   vec3 armColor = vec3(0.5f, 0.3f, 0.7f);
+   vec3 headColor = vec3(1.0f, 1.0f, 1.0f);
 
    vec3 scaleFactor = vec3(1.0f, 1.0f, 1.0f);
 
