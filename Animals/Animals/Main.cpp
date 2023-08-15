@@ -1648,8 +1648,8 @@ void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizon
         }
     }
 
-    if (numAntInRange < 5) {
-        int diff = 5 - numAntInRange;
+    if (numAntInRange < 10) {
+        int diff = 10 - numAntInRange;
         for (int i = 0; i < diff; i++) {
 
             float height = randomInRange(10.0f, 40.0f) - 5.0f;
