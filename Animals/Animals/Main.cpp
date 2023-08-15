@@ -63,6 +63,7 @@ void handleInputs();
 GLFWwindow* window = NULL;
 
 void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
+void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -503,6 +504,7 @@ int main(int argc, char* argv[])
     GLuint sphere2VAO = setupModelEBO(sphere2Vertices, vertices, normals, UVs, vertexIndices);
 
     vector<Bird *> birdList;
+    vector<characterObject*> humanList;
 
     Bird* bird1 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-5.0f, 5.0f, 15.0f), 1, 0, 0.05f, 1.0f);
     Bird* bird2 = new Bird(shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, vec3(-15.0f, 15.0f, -3.0f), 1, 0, 0.05f, 1.0f);
@@ -510,8 +512,8 @@ int main(int argc, char* argv[])
     // birdList.push_back(bird1);
     // birdList.push_back(bird2);
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
-    characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
-    characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
+    //characterObject NPC1(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 10.0f, 0.0f, -5.0f);
+    //characterObject NPC2(shaderProgram, shadowShaderProgram, vao, texture1Uniform, 5.0f, 4.0f, 3.0f);
 
     Ant ant1(shaderProgram, shadowShaderProgram, sphere2VAO, vao, texture1Uniform, vec3(20.0f, 1.25f, 2.0f), vertexIndices.size(), insectTextureID, defaultTextureID);
     
@@ -755,7 +757,8 @@ int main(int argc, char* argv[])
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
-        int n = birdList.size();
+        int nBird = birdList.size();
+        int nHuman = humanList.size();
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -766,17 +769,20 @@ int main(int argc, char* argv[])
             glClear(GL_DEPTH_BUFFER_BIT);
 
             createFloorShadow(shadowShaderProgram, vao2);
-            for(int i = 0; i < n; i++) {
+            for(int i = 0; i < nBird; i++) {
                 birdList[i]->drawShadow();
                 birdList[i]->moveWings();
-                birdList[i]->move();
+                //birdList[i]->move();
+            }
+            for (int i = 0; i < nHuman; i++) {
+               humanList[i]->drawShadow();
             }
             cameraMan.drawShadow();
-            NPC1.drawShadow();
-            NPC2.drawShadow();
+            //NPC1.drawShadow();
+            //NPC2.drawShadow();
 
-            bird1->drawShadow();
-            bird2->drawShadow();
+            /*bird1->drawShadow();
+            bird2->drawShadow();*/
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
 
@@ -803,24 +809,27 @@ int main(int argc, char* argv[])
         
         // ------------------- 
             
-            for(int i = 0; i < n; i++) {
+            for(int i = 0; i < nBird; i++) {
                 birdList[i]->draw();
                 birdList[i]->moveWings();
-                birdList[i]->move();
+                //birdList[i]->move();
             }
-            bird1->draw();
+            for (int i = 0; i < nHuman; i++) {
+               humanList[i]->draw();
+            }
+            /*bird1->draw();
             bird1->move();
             bird1->moveWings();
             bird2->draw();
-            bird2->moveWings();
+            bird2->moveWings();*/
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
-            NPC1.draw();
+            /*NPC1.draw();
             NPC1.moveAnimation();
             NPC1.move();
             NPC2.draw();
             NPC2.move();
-            NPC2.rotateSelf();
+            NPC2.rotateSelf();*/
             // cameraMan.updatePos(dt);
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
@@ -991,7 +1000,7 @@ int main(int argc, char* argv[])
         lastMousePosY = mousePosY;
 
         // Convert to spherical coordinates
-        const float cameraAngularSpeed = 20.0f;
+        const float cameraAngularSpeed = 40.0f;
         cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
         cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
 
@@ -1032,7 +1041,7 @@ int main(int argc, char* argv[])
             }
             projectionMatrix = perspective(fov, // field of view in degrees
                 1024.0f / 768.0f,  // aspect ratio
-                0.01f, 100.0f);   // near and far (near > 0)
+                0.01f, 1000.0f);   // near and far (near > 0)
 
             SetUniformMat4(shaderProgram, "projectionMatrix", projectionMatrix);
             ViewProjectionTransformMatrix = projectionMatrix * viewMatrix;
@@ -1077,6 +1086,7 @@ int main(int argc, char* argv[])
 
         cameraPosition = cameraMan.getHeadPosition();
         generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
+        generateHuman(cameraPosition, humanList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
@@ -1516,9 +1526,7 @@ int createCubeVAO2() {
 void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
     int n = birdList.size();
     int numBirdInRange = 0;
-    if(n > 25) {
-        return;
-    }
+
     for(int i = 0; i < n; i++) {
         vec3 distance = abs(cameraPosition - birdList[i]->getPosition());
         float length = glm::length(distance);  // distance.x
@@ -1528,14 +1536,14 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     }
 
     if(numBirdInRange < 4) {
-        int diff = 5 - numBirdInRange;
+        int diff = 4 - numBirdInRange;
         for(int i = 0; i < diff; i++) {
             float yPos = randomInRange(50.0f, 70.0f);
-            float rPos = randomInRange(50.0f, 100.0f);
+            float rPos = randomInRange(100.0f, 125.0f);
 
             float angle = randomInRange(0, 360);
             float yaw = randomInRange(0, 360);
-            float size = randomInRange(0.5f, 4.0f);
+            float size = randomInRange(0.5f, 8.0f);
             float circleDistance = randomInRange(0.0f, 3.0f);
             float circleSpeed = randomInRange(0.0f, 0.3f);
             // std::cout << "angle - "<< angle << " cameraAngle " << cameraHorizontalAngle << std::endl;
@@ -1554,3 +1562,33 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     }
 
 }
+void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
+   int n = humanList.size();
+   int numHumanInRange = 0;
+
+   for (int i = 0; i < n; i++) {
+      vec3 distance = abs(cameraPosition - humanList[i]->getHeadPosition());
+      float length = glm::length(distance); 
+      if (length < 100.0f) {
+         numHumanInRange++;
+      }
+   }
+
+   if (numHumanInRange < 5) {
+      int diff = 5 - numHumanInRange;
+      for (int i = 0; i < diff; i++) {
+
+         float height = randomInRange(5.0f, 25.0f);
+         float xPos = randomInRange(-100.0f, 100.0f);
+         float zPos = randomInRange(-100.0f, 100.0f);
+         std::cout << height << " x - z " << xPos << std::endl;
+         characterObject* pointer = new characterObject(shaderProgram, shaderShadowProgram, vao, texture1Uniform, height, xPos+cameraPosition.x, zPos + cameraPosition.z);
+
+         humanList.push_back(pointer);
+
+      }
+   }
+
+}
+
+
