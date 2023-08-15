@@ -57,6 +57,7 @@ class Bird {
          float colorG = randomInRange(0.5f, 1.0f);
          float colorB = randomInRange(0.5f, 1.0f);
          this->color = vec3(colorR, colorG, colorB);
+
          if(randomInRange(0.0f, 1.0f) > 0.5f) {
             circleDirection = 1.0f;
          } else {
