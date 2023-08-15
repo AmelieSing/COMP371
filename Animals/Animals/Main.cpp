@@ -721,7 +721,9 @@ int main(int argc, char* argv[])
     glUseProgram(planeshaderProgram);
     glUniform4fv(planeColorLocation, 1, value_ptr(newplaneColor));
 
-    vec3 randomTreePos1 = vec3(randomInRange(-20.0f,-10.0f), randomInRange(-20.0f, -10.0f), randomInRange(-20.0f, -10.0f));
+    vec3 randomTreePos1 = vec3(randomInRange(-20.0f,20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+    vec3 randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+    vec3 randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
      
     while (!glfwWindowShouldClose(window))
     {
@@ -892,6 +894,21 @@ int main(int argc, char* argv[])
         model = projectionMatrix * viewMatrix * translate(mat4(1.0f), glm::vec3(-20.5f, 5.0f, -10.0f)) * scale(mat4(1), vec3(30, 10, 10));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, treeTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos1) * scale(mat4(1), vec3(20, 20, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos2) * scale(mat4(1), vec3(20, 30, 20));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glActiveTexture(GL_TEXTURE5); //
+        glBindTexture(GL_TEXTURE_2D, bushTextureID);
+        glUniform1i(textureLocation, 5);
+        model = projectionMatrix * viewMatrix * translate(mat4(1.0f), randomTreePos3) * scale(mat4(1), vec3(30, 10, 10));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         
         
         glBindVertexArray(0);
@@ -979,6 +996,10 @@ int main(int argc, char* argv[])
             vec4 newplaneColor = vec4(randomInRange(-0.0f, 1.0f), randomInRange(-0.0f, 1.0f), randomInRange(-1.0f, 1.0f), 1.0f);
             glUseProgram(planeshaderProgram);
             glUniform4fv(planeColorLocation, 1, value_ptr(newplaneColor));
+
+            randomTreePos1 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+            randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
+            randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
 
 
         }
