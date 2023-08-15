@@ -64,6 +64,7 @@ GLFWwindow* window = NULL;
 
 void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
 void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
+void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform, GLuint textureID, GLuint defaultID);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -506,6 +507,7 @@ int main(int argc, char* argv[])
 
     vector<Bird *> birdList;
     vector<characterObject*> humanList;
+    vector<Ant*> antList;
 
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
 
@@ -639,8 +641,6 @@ int main(int argc, char* argv[])
     float frogCheekScale = frogCheekMin;
     bool frogCheekIncrease = true;
 
-    
-    // Entering Main Loop
 
     //plane
     float planevertices[] = {
@@ -725,6 +725,8 @@ int main(int argc, char* argv[])
     vec3 randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
     vec3 randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
      
+    // Entering Main Loop
+
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -768,6 +770,7 @@ int main(int argc, char* argv[])
 
         int nBird = birdList.size();
         int nHuman = humanList.size();
+        int nAnt = antList.size();
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -789,6 +792,10 @@ int main(int argc, char* argv[])
                   humanList[i]->moveAnimation();
                }
             }
+            for (int i = 0; i < nAnt; i++) {
+                antList[i]->drawShadow();
+            }
+
             cameraMan.drawShadow();
 
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
@@ -827,6 +834,10 @@ int main(int argc, char* argv[])
                if (i % 2 == 0) {
                   humanList[i]->moveAnimation();
                }
+            }
+            for (int i = 0; i < nAnt; i++) {
+                antList[i]->draw();
+                antList[i]->moveAntennas();
             }
 
             cameraMan.draw();
@@ -1123,6 +1134,7 @@ int main(int argc, char* argv[])
         cameraPosition = cameraMan.getHeadPosition();
         generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
         generateHuman(cameraPosition, humanList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
+        generateAnt(cameraPosition, antList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, insectTextureID, defaultTextureID);
 
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
@@ -1594,6 +1606,7 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     }
 
 }
+
 void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
    int n = humanList.size();
    int numHumanInRange = 0;
@@ -1623,4 +1636,32 @@ void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, flo
 
 }
 
+void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform, GLuint textureID, GLuint defaultID) {
+    int n = antList.size();
+    int numAntInRange = 0;
+
+    for (int i = 0; i < n; i++) {
+        vec3 distance = abs(cameraPosition - antList[i]->getPosition());
+        float length = glm::length(distance);
+        if (length < 200.0f) {
+            numAntInRange++;
+        }
+    }
+
+    if (numAntInRange < 5) {
+        int diff = 5 - numAntInRange;
+        for (int i = 0; i < diff; i++) {
+
+            float height = randomInRange(10.0f, 40.0f) - 5.0f;
+            float xPos = randomInRange(-100.0f, 100.0f);
+            float zPos = randomInRange(-100.0f, 100.0f);
+            std::cout << height << " x - z " << xPos << std::endl;
+            Ant* pointer = new Ant(shaderProgram, shaderShadowProgram, sphere2VAO, vao, texture1Uniform, vec3(xPos + cameraPosition.x, 1.25f, zPos + cameraPosition.z), sphere2Vertices, textureID, defaultID);
+
+            antList.push_back(pointer);
+
+        }
+    }
+
+}
 

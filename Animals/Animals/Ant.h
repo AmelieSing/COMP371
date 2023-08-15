@@ -23,6 +23,7 @@ public:
 	void drawShadow();
 	void draw();
 	void moveAntennas();
+    vec3 getPosition();
 
 private:
     vec3 bodyPosition;

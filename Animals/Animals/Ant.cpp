@@ -604,6 +604,10 @@ void Ant::moveAntennas() {
         
 }
 
+vec3 Ant::getPosition() {
+    return bodyPosition;
+}
+
 
 // Functions
 
@@ -648,3 +652,4 @@ void createFloorAnt(int shaderProgram, int vao, GLint texture1Uniform) {
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 }
+
