@@ -5,7 +5,7 @@ void generateAnimal(GLuint VAO,int vertCount, std::vector<GLuint>* textures, gam
 {
 	//generate a seed
 	time_t t;
-	std::srand((unsigned)time(&t));
+	std::srand((unsigned)time(&t)+rand());
 
 	//Remove and delete all old data
 	animal.setVAO(NULL);
@@ -217,14 +217,56 @@ void generateAnimal(GLuint VAO,int vertCount, std::vector<GLuint>* textures, gam
 	beak->setTransformRotation(35.0f, 0, 0);
 	beak->setColourVector(red, green, blue);
 
-	animal.setTransformPosition(10,(xbody)*2.2 + (yLegs)*3, 0);
+	animal.setTransformPosition(0,(xbody)*2.2 + (yLegs)*3, 0);
 	animal.setTransformRotation(0, 0, 0);
 
 }
 
 double randomFloat(float max,float min)
 {
+	time_t t;
+	std::srand((unsigned)time(&t) + rand());
 	double random = (float)(rand()) / (float)RAND_MAX;
 	double dif = max - min;
 	return min + (dif * random);
 }
+
+void bipedalAnimal::animate()
+{
+	this->angle += 0.01;
+
+	leftHip_joint.setTransformRotation(glm::vec3(45 * std::sin(angle * 10), 0.0f, 0.0f));
+	rightHip_joint.setTransformRotation(glm::vec3(-45 * std::sin(angle * 10), 0.0f, 0.0f));
+	leftShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, -30 * std::sin(angle * 15)));
+	rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(angle * 15)));
+	neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(angle * 25) / 12)));
+}
+
+void bipedalAnimal::reGenerate(glm::vec3 cameraPosition, GLuint VAO, int vertCount, std::vector<GLuint>* textures)
+{
+
+	generateAnimal(VAO, vertCount, textures, animalCore, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
+	
+	float xTransform = randomFloat(100, -100) + cameraPosition.x;
+	if (rand() % 2 == 0)
+	{
+		xTransform *= -1;
+	}
+	else
+		xTransform *= 1;
+
+	//std::srand((unsigned)time(&t) - rand());
+	float zTransform = randomFloat(100, -100) + cameraPosition.z;
+	if (rand() % 2 == 0)
+	{
+		zTransform *= -1;
+	}
+	else
+		zTransform *= 1;
+
+	animalCore.setTransformPosition(xTransform, animalCore.getTransformPosition().y, zTransform);
+	animalCore.setTransformRotation(0, randomFloat(360, 0), 0);
+
+}
+
+

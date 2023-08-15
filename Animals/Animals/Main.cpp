@@ -25,6 +25,7 @@
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
@@ -537,6 +538,7 @@ int main(int argc, char* argv[])
     gameObject neck_joint;
     gameObject leftShoulder_joint;
     gameObject rightShoulder_joint;
+    
     float wokidooAnimalRotate = 0.0f;
     generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
     /*
@@ -606,6 +608,20 @@ int main(int argc, char* argv[])
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
     wokidooAnimal.setTransformRotation(0.0f, -90.0f, 0.0f);
+
+    std::vector<bipedalAnimal*> flappyBois;
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+    flappyBois.push_back(new bipedalAnimal(sphere2VAO, vertexIndices.size(), generatorTextures));
+
+
 
     //Frog parameters
     gameObject frogAnimal;
@@ -800,7 +816,10 @@ int main(int argc, char* argv[])
 
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
-
+            for (int i = 0; i < flappyBois.size(); i++)
+            {
+                flappyBois.at(i)->animalCore.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            }
             ant1.drawShadow();
         }
 
@@ -845,7 +864,10 @@ int main(int argc, char* argv[])
 
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-
+            for (int i = 0; i < flappyBois.size(); i++)
+            {
+                flappyBois.at(i)->animalCore.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+            }
             ant1.draw();
             ant1.moveAntennas();
 
@@ -940,7 +962,23 @@ int main(int argc, char* argv[])
         leftShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, -30 * std::sin(wokidooAnimalRotate * 15)));
         rightShoulder_joint.setTransformRotation(glm::vec3(0.0f, 0.0f, 30 * std::sin(wokidooAnimalRotate * 15)));
         neck_joint.setTransformPosition(glm::vec3(neck_joint.getTransformPosition()[0], neck_joint.getTransformPosition()[1], neck_joint.getTransformPosition()[2] + (std::sin(wokidooAnimalRotate * 25) / 12)));
-        
+
+        for (int i = 0; i < flappyBois.size(); i++)
+        {
+            float xDist = cameraMan.getHeadPosition().x - flappyBois.at(i)->animalCore.getTransformPosition().x;
+            float zDist = cameraMan.getHeadPosition().z - flappyBois.at(i)->animalCore.getTransformPosition().z;
+            float rootedDist = sqrt((xDist*xDist) + (zDist*zDist));
+            if (rootedDist > 100)
+            {
+                flappyBois.at(i)->reGenerate(cameraPosition,sphere2VAO,vertexIndices.size(),generatorTextures);
+            }
+        }
+
+        for (int i = 0; i < flappyBois.size(); i++)
+        {
+            flappyBois.at(i)->animate();
+        }
+
         world.Update(dt);
         world.Draw(smokeTextureID, particleShaderProgram);
         glBindTexture(GL_TEXTURE_2D, defaultTextureID);
