@@ -65,6 +65,8 @@ GLFWwindow* window = NULL;
 
 void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
 void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform);
+void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform, GLuint textureID, GLuint defaultID);
+void generateFrog(vec3 cameraPosition, vector<Frog*>& frogList, float cameraHorizontalAngle, int sphere2VAO, int sphere2Vertices, std::vector<GLuint>* textures);
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -490,8 +492,8 @@ int main(int argc, char* argv[])
     glUniform1i(texture1Uniform, 7); // Texture unit 6 is now bound to texture1
 
     glActiveTexture(GL_TEXTURE8);
-    // glBindTexture(GL_TEXTURE_2D, birdFurTextureID);
-    // glUniform1i(texture1Uniform, 7); // Texture unit 7 is now bound to texture1
+    glBindTexture(GL_TEXTURE_2D, frogSkinTextureID);
+    glUniform1i(texture1Uniform, 8); // Texture unit 7 is now bound to texture1
 
     std::cout << cubemapTexture;
 
@@ -507,6 +509,8 @@ int main(int argc, char* argv[])
 
     vector<Bird *> birdList;
     vector<characterObject*> humanList;
+    vector<Ant*> antList;
+    vector<Frog*> frogList;
 
     characterObject cameraMan(shaderProgram, shadowShaderProgram, vao, texture1Uniform, cameraPosition);
 
@@ -539,69 +543,6 @@ int main(int argc, char* argv[])
     
     float wokidooAnimalRotate = 0.0f;
     generateAnimal(sphere2VAO, vertexIndices.size(), generatorTextures,wokidooAnimal, neck_joint, leftHip_joint, rightHip_joint, leftShoulder_joint, rightShoulder_joint);
-    /*
-        //MAIN BODY
-        gameObject mainBody;
-        wokidooAnimal.addChildObject(&mainBody);
-        mainBody.setVAO(vao);
-        mainBody.setTexture(defaultTextureID);
-        mainBody.setVertCount(36);
-        mainBody.setTransformScale(glm::vec3(4.0f,4.0f,5.0f));
-        mainBody.setTransformPosition(0.0f, 0.0f, 1.0f);
-        mainBody.setColourVector(glm::vec3(1.0f, 0.0f, 0.0f));
-        
-        gameObject tail;
-        wokidooAnimal.addChildObject(&tail);
-        tail.setVAO(vao);
-        tail.setTexture(defaultTextureID);
-        tail.setVertCount(36);
-        tail.setTransformScale(0.6f, 2.0f, 4.0f);
-        tail.setTransformPosition(0.0f, 1.0f, -2.2f);
-        tail.setTransformRotation(25.0f, 0.0f, 0.0f);
-
-        gameObject leftWing;
-        leftShoulder_joint.addChildObject(&leftWing);
-        leftWing.setVAO(vao);
-        leftWing.setTexture(defaultTextureID);
-        leftWing.setVertCount(36);
-        leftWing.setTransformScale(glm::vec3(4.0f,1.0f,2.0f));
-        leftWing.setTransformPosition(glm::vec3(2.0f, 0.0f, 0.0f));
-
-        gameObject rightWing;
-        rightShoulder_joint.addChildObject(&rightWing);
-        rightWing.setVAO(vao);
-        rightWing.setTexture(defaultTextureID);
-        rightWing.setVertCount(36);
-        rightWing.setTransformScale(glm::vec3(4.0f, 1.0f, 2.0f));
-        rightWing.setTransformPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
-
-        gameObject leftLeg;
-        leftHip_joint.addChildObject(&leftLeg);
-        leftLeg.setVAO(vao);
-        leftLeg.setTexture(defaultTextureID);
-        leftLeg.setVertCount(36);
-        leftLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
-        leftLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-
-        gameObject rightLeg;
-        rightHip_joint.addChildObject(&rightLeg);
-        rightLeg.setVAO(vao);
-        rightLeg.setTexture(defaultTextureID);
-        rightLeg.setVertCount(36);
-        rightLeg.setTransformScale(glm::vec3(1.0f, 3.0f, 1.0f));
-        rightLeg.setTransformPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-
-        gameObject head;
-        neck_joint.addChildObject(&head);
-        head.setVAO(vao);
-        head.setTexture(defaultTextureID);
-        head.setVertCount(36);
-        head.setTransformScale(glm::vec3(3.0f, 3.0f, 3.0f));
-        head.setTransformPosition(glm::vec3(0.0f, 1.5f, 0.0f));
-
-
-    }
-    */
     gameObject wokidooAnimalPivot;
     wokidooAnimalPivot.addChildObject(&wokidooAnimal);
     wokidooAnimal.setTransformPosition(0.0f, 4.0f, 8.0f);
@@ -622,41 +563,20 @@ int main(int argc, char* argv[])
 
 
     //Frog parameters
-    gameObject frogAnimal;
-    gameObject frogLeftHip_joint; 
-    gameObject frogRightHip_joint;
-    gameObject frogLeftKnee_joint;
-    gameObject frogRightKnee_joint;
-    gameObject frogLeftAnkle_joint;
-    gameObject frogRightAnkle_joint;
-    gameObject frogLeftShoulder_joint;
-    gameObject frogRightShoulder_joint;
-    gameObject frogLeftElbow_joint;
-    gameObject frogRightElbow_joint;
-    gameObject frogLeftWrist_joint;
-    gameObject frogRightWrist_joint;
-    gameObject frogLeftCheek_joint;
-    gameObject frogRightCheek_joint;
-
     float frogAnimalRotate = 0.0f;
-    generateFrog(sphere2VAO, vertexIndices.size(), frogTextures, frogAnimal, 
-        frogLeftHip_joint, frogRightHip_joint, frogLeftKnee_joint, frogRightKnee_joint, frogLeftAnkle_joint, frogRightAnkle_joint,
-        frogLeftShoulder_joint, frogRightShoulder_joint, frogLeftElbow_joint, frogRightElbow_joint, frogLeftWrist_joint, frogRightWrist_joint,
-        frogLeftCheek_joint, frogRightCheek_joint);
+    Frog frog1 = Frog(sphere2VAO, vertexIndices.size(), frogTextures);
 
     gameObject frogPivot;
-    frogPivot.addChildObject(&frogAnimal);
-    frogAnimal.setTransformPosition(-12.0f, 3.5f, 20.0f);
-    frogAnimal.setTransformRotation(0.0f, 25.0f, 0.0f);
-    frogAnimal.setTransformScale(0.6f,0.6f,0.6f);
+    frogPivot.addChildObject(&frog1.frog);
+    frogPivot.setTransformPosition(-12.0f, 3.5f, 20.0f);
+    frogPivot.setTransformRotation(0.0f, 25.0f, 0.0f);
+    frogPivot.setTransformScale(0.6f,0.6f,0.6f);
 
     float frogCheekMax = 0.7;
     float frogCheekMin = 0.1;
     float frogCheekScale = frogCheekMin;
     bool frogCheekIncrease = true;
 
-    
-    // Entering Main Loop
 
     //plane
     float planevertices[] = {
@@ -741,6 +661,8 @@ int main(int argc, char* argv[])
     vec3 randomTreePos2 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
     vec3 randomTreePos3 = vec3(randomInRange(-20.0f, 20.0f), 10.0f, randomInRange(-30.0f, -5.0f));
      
+    // Entering Main Loop
+
     while (!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
@@ -784,6 +706,8 @@ int main(int argc, char* argv[])
 
         int nBird = birdList.size();
         int nHuman = humanList.size();
+        int nAnt = antList.size();
+        int nFrog = frogList.size();
         // ------------------------- SHADOW PASS -------------------------------
         {
             glUseProgram(shadowShaderProgram);
@@ -805,15 +729,24 @@ int main(int argc, char* argv[])
                   humanList[i]->moveAnimation();
                }
             }
+            for (int i = 0; i < nAnt; i++) {
+                antList[i]->drawShadow();
+            }
+            ant1.drawShadow();
+            for (int i = 0; i < nFrog; i++) {
+                frogList[i]->frog.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+            }
+            frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
+
+
             cameraMan.drawShadow();
 
             wokidooAnimalPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
-            frogPivot.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             for (int i = 0; i < flappyBois.size(); i++)
             {
                 flappyBois.at(i)->animalCore.drawModelShadows(GL_TRIANGLES, shadowShaderProgram, glGetUniformLocation(shadowShaderProgram, "worldMatrix"));
             }
-            ant1.drawShadow();
+
         }
 
 
@@ -847,18 +780,29 @@ int main(int argc, char* argv[])
                   humanList[i]->moveAnimation();
                }
             }
-
+            for (int i = 0; i < nAnt; i++) {
+                antList[i]->draw();
+                antList[i]->moveAntennas();
+            }
+            ant1.draw();
+            ant1.moveAntennas();
+            
             cameraMan.draw();
             cameraMan.setBodyAngle(cameraHorizontalAngle);
 
             wokidooAnimalPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
-            frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             for (int i = 0; i < flappyBois.size(); i++)
             {
                 flappyBois.at(i)->animalCore.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
             }
-            ant1.draw();
-            ant1.moveAntennas();
+
+            for (int i = 0; i < nFrog; i++) {
+                frogList[i]->frog.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+            }
+            frogPivot.drawModel(GL_TRIANGLES, shaderProgram, glGetUniformLocation(shaderProgram, "worldMatrix"), glGetUniformLocation(shaderProgram, "customColor"), glGetUniformLocation(shaderProgram, "textureSampler"));
+
+
+
 
         }
 
@@ -973,24 +917,13 @@ int main(int argc, char* argv[])
         glBindTexture(GL_TEXTURE_2D, defaultTextureID);
 
 
-        //Frog animations
+        //Frog animation
 
-
-        frogLeftCheek_joint.setTransformScale(frogCheekScale, frogCheekScale, frogCheekScale);
-        frogRightCheek_joint.setTransformScale(frogCheekScale, frogCheekScale, frogCheekScale);
-
-        if (frogCheekIncrease == true && frogCheekScale <= 0.7) {
-            frogCheekScale += 0.01;
-	        }
-	    else if (frogCheekIncrease == false && frogCheekScale >= 0.1) {
-            frogCheekScale -= 0.01;
-	    }
-	    else if (frogCheekScale > 0.7 && frogCheekIncrease == true) {
-		    frogCheekIncrease = false;
-	    }
-	    else if (frogCheekScale < 0.1 && frogCheekIncrease == false) {
-            frogCheekIncrease = true;
-	    }
+        frog1.cheekPuff();
+        for (int i = 0; i < nFrog; i++) {
+            frogList[i]->cheekPuff();
+        }
+        
 
         //Rotate the world
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate left
@@ -1161,7 +1094,8 @@ int main(int argc, char* argv[])
         cameraPosition = cameraMan.getHeadPosition();
         generateBird(cameraPosition, birdList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
         generateHuman(cameraPosition, humanList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform);
-
+        generateAnt(cameraPosition, antList, cameraHorizontalAngle, shaderProgram, shadowShaderProgram, vao, sphere2VAO, sphere2Vertices, texture1Uniform, insectTextureID, defaultTextureID);
+        generateFrog(cameraPosition, frogList, cameraHorizontalAngle,sphere2VAO, sphere2Vertices, frogTextures);
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp);
 
         SetUniformMat4(skyboxShader, "view", glm::mat4(glm::mat3(viewMatrix)));
@@ -1632,6 +1566,7 @@ void generateBird(vec3 cameraPosition, vector<Bird *>& birdList, float cameraHor
     }
 
 }
+
 void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform) {
    int n = humanList.size();
    int numHumanInRange = 0;
@@ -1661,4 +1596,62 @@ void generateHuman(vec3 cameraPosition, vector<characterObject*>& humanList, flo
 
 }
 
+void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizontalAngle, int shaderProgram, int shaderShadowProgram, int vao, int sphere2VAO, int sphere2Vertices, GLint texture1Uniform, GLuint textureID, GLuint defaultID) {
+    int n = antList.size();
+    int numAntInRange = 0;
+
+    for (int i = 0; i < n; i++) {
+        vec3 distance = abs(cameraPosition - antList[i]->getPosition());
+        float length = glm::length(distance);
+        if (length < 200.0f) {
+            numAntInRange++;
+        }
+    }
+
+    if (numAntInRange < 20) {
+        int diff = 20 - numAntInRange;
+        for (int i = 0; i < diff; i++) {
+
+            float xPos = randomInRange(-100.0f, 100.0f);
+            float zPos = randomInRange(-100.0f, 100.0f);
+            Ant* pointer = new Ant(shaderProgram, shaderShadowProgram, sphere2VAO, vao, texture1Uniform, vec3(xPos + cameraPosition.x, 1.25f, zPos + cameraPosition.z), sphere2Vertices, textureID, defaultID);
+
+            antList.push_back(pointer);
+
+        }
+    }
+
+}
+
+void generateFrog(vec3 cameraPosition, vector<Frog*>& frogList, float cameraHorizontalAngle, int sphere2VAO, int sphere2Vertices, std::vector<GLuint>* textures) {
+
+    int n = frogList.size();
+    int numAntInRange = 0;
+
+    for (int i = 0; i < n; i++) {
+        vec3 distance = abs(cameraPosition - frogList[i]->frog.getTransformPosition());
+        float length = glm::length(distance);
+        if (length < 200.0f) {
+            numAntInRange++;
+        }
+    }
+
+    if (numAntInRange < 5) {
+        int diff = 5 - numAntInRange;
+        for (int i = 0; i < diff; i++) {
+
+            float xPos = randomInRange(-100.0f, 100.0f);
+            float zPos = randomInRange(-100.0f, 100.0f);
+            float frogSize = randomInRange(0.1f, 2.0f);
+            Frog* pointer = new Frog(sphere2VAO, sphere2Vertices,textures);
+            pointer->frog.setTransformPosition(xPos + cameraPosition.x, frogSize * 5.7f, zPos + cameraPosition.z);
+            pointer->frog.setTransformRotation(0, randomInRange(0, 360.0f), 0);
+            pointer->frog.setTransformScale(frogSize, frogSize, frogSize);
+
+            frogList.push_back(pointer);
+
+        }
+    }
+
+}
 

@@ -16,6 +16,8 @@
 using namespace glm;
 using namespace std;
 
+float randomInRangeAnt(float lowerBound, float upperBound);
+
 class Ant {
 public: 
 	Ant();
@@ -23,6 +25,7 @@ public:
 	void drawShadow();
 	void draw();
 	void moveAntennas();
+    vec3 getPosition();
 
 private:
     vec3 bodyPosition;
@@ -45,13 +48,17 @@ private:
     vec3 antennaSize;
     vec3 rotationPointAntennaL;
     vec3 rotationPointAntennaR;
-    vec3 scaleFactor = vec3(1.0f, 1.0f, 1.0f);
+    float antScale = randomInRangeAnt(0.5f, 2.0f);
+    vec3 scaleFactor = vec3(antScale, antScale, antScale);
+    vec3 color = vec3(randomInRangeAnt(0.0, 1.0), randomInRangeAnt(0.0, 1.0), randomInRangeAnt(0.0, 1.0));
+
 
     float antennaAngle = -90.0f;
     bool antennaUp = false;
     bool antennaDown = false;
     bool goingUp = true;
     bool goingDown = false;
+    float rotationModel = randomInRangeAnt(0, 360);
     float yaw = 0;
     float pitch = 0;
     float roll = 0;

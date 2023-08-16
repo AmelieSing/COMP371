@@ -1,4 +1,5 @@
 #include "Ant.h"
+#include <random>
 
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
@@ -93,7 +94,7 @@ Ant::Ant(int shaderProgram, int shaderShadowProgram, int sphereVao, int cubeVao,
     this->texture1Uniform = texture1Uniform;
     this->shaderShadowProgram = shaderShadowProgram;
     this->vertex = vertex;
-
+    
     this->bodyPosition = bodyPos;
     this->bodySize = vec3(0.25f, 0.25f, 0.25f);
     this->headPosition = vec3(bodyPosition.x + bodySize.x / 2 + 0.5f,
@@ -174,7 +175,8 @@ void Ant::drawShadow() {
     glUseProgram(shaderShadowProgram);
     glBindVertexArray(sphereVao);
     // BODY
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * scale(mat4(1.0f), bodySize);
@@ -185,7 +187,8 @@ void Ant::drawShadow() {
 
     // HEAD
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
     //    * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), headPosition)
@@ -197,7 +200,8 @@ void Ant::drawShadow() {
 
     // Tail
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
    //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), tailPosition)
@@ -209,7 +213,8 @@ void Ant::drawShadow() {
 
     // Eye L
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionL)
@@ -221,7 +226,8 @@ void Ant::drawShadow() {
 
     // Eye R
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionR)
@@ -233,7 +239,8 @@ void Ant::drawShadow() {
 
     // LEG1 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //      * translate(mat4(1.0f), bodyPosition) 
         * translate(mat4(1.0f), leg1PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -247,7 +254,8 @@ void Ant::drawShadow() {
 
     // LEG1 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //       * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg1PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -262,7 +270,8 @@ void Ant::drawShadow() {
 
     // LEG2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         // * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -276,7 +285,8 @@ void Ant::drawShadow() {
 
     // LEG2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //   * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -290,7 +300,8 @@ void Ant::drawShadow() {
 
     // LEG3 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -304,7 +315,8 @@ void Ant::drawShadow() {
 
     // Antenna L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -318,7 +330,8 @@ void Ant::drawShadow() {
 
     // Antenna R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -332,7 +345,8 @@ void Ant::drawShadow() {
 
     // Antenna 2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antenna2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -346,7 +360,8 @@ void Ant::drawShadow() {
 
     // Antenna 2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antenna2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -366,38 +381,43 @@ void Ant::draw() {
     glBindTexture(GL_TEXTURE_2D, textureID);
     glUniform1i(texture1Uniform, 6);
     // BODY
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+
+    modelMatrix = 
+        rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * scale(mat4(1.0f), bodySize);
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawElements(GL_TRIANGLES, vertex, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     // HEAD
      glBindVertexArray(sphereVao);
-     modelMatrix = scale(mat4(1.0f), scaleFactor)
+     modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+         * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), headPosition)
         * scale(mat4(1.0f), vec3(0.2f, 0.2f, 0.2f));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawElements(GL_TRIANGLES, vertex, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     // Tail
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), tailPosition)
         * scale(mat4(1.0f), vec3(bodySize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawElements(GL_TRIANGLES, vertex, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -407,7 +427,8 @@ void Ant::draw() {
     glUniform1i(texture1Uniform, 1);
     // Eye L
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionL)
@@ -420,7 +441,8 @@ void Ant::draw() {
 
     // Eye R
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionR)
@@ -436,7 +458,8 @@ void Ant::draw() {
     glUniform1i(texture1Uniform, 6);
     // LEG1 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition) 
         * translate(mat4(1.0f), leg1PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -444,14 +467,15 @@ void Ant::draw() {
        
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // LEG1 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
  //       * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg1PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -459,7 +483,7 @@ void Ant::draw() {
         
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
@@ -467,7 +491,8 @@ void Ant::draw() {
     
     // LEG2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
        // * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -475,14 +500,15 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // LEG2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
      //   * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -490,14 +516,15 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // LEG3 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
       //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -505,14 +532,15 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // LEG3 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
       //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -520,14 +548,15 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // Antenna L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -535,14 +564,15 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // Antenna R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -550,20 +580,22 @@ void Ant::draw() {
 
         * scale(mat4(1.0f), vec3(legSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
 
     // Antenna 2 L
     glBindVertexArray(cubeVao);
-    modelMatrix =
-         translate(mat4(1.0f), antenna2PositionL) 
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        *
+        scale(mat4(1.0f), scaleFactor)
+         * translate(mat4(1.0f), antenna2PositionL) 
         * rotate(mat4(1.0f), radians(antennaAngle), vec3(0.0f, 0.0f, 1.0f))
-        * scale(mat4(1.0f), scaleFactor)
+ 
         * scale(mat4(1.0f), vec3(antennaSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
@@ -571,12 +603,14 @@ void Ant::draw() {
     // Antenna 2 R
     glBindVertexArray(cubeVao);
     modelMatrix =
-        translate(mat4(1.0f), antenna2PositionR)
-        * rotate(mat4(1.0f), radians(antennaAngle), vec3(0.0f, 0.0f, 1.0f))
+        rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
         * scale(mat4(1.0f), scaleFactor)
+        * translate(mat4(1.0f), antenna2PositionR)
+        * rotate(mat4(1.0f), radians(antennaAngle), vec3(0.0f, 0.0f, 1.0f))
+
         * scale(mat4(1.0f), vec3(antennaSize));
     SetUniformMat4Ant(shaderProgram, "worldMatrix", modelMatrix);
-    SetUniformVec3Ant(shaderProgram, "customColor", vec3(0.63f, 0.32f, 0.18f));
+    SetUniformVec3Ant(shaderProgram, "customColor", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
@@ -602,6 +636,10 @@ void Ant::moveAntennas() {
         antennaAngle -= 0.1f;
     }
         
+}
+
+vec3 Ant::getPosition() {
+    return bodyPosition;
 }
 
 
@@ -647,4 +685,11 @@ void createFloorAnt(int shaderProgram, int vao, GLint texture1Uniform) {
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
     glBindVertexArray(0);
+}
+
+float randomInRangeAnt(float lowerBound, float upperBound) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(lowerBound, upperBound);
+    return dist(gen);
 }
