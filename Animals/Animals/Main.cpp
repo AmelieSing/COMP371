@@ -1608,8 +1608,8 @@ void generateAnt(vec3 cameraPosition, vector<Ant*>& antList, float cameraHorizon
         }
     }
 
-    if (numAntInRange < 10) {
-        int diff = 10 - numAntInRange;
+    if (numAntInRange < 20) {
+        int diff = 20 - numAntInRange;
         for (int i = 0; i < diff; i++) {
 
             float xPos = randomInRange(-100.0f, 100.0f);
