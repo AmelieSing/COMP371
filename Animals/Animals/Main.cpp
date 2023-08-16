@@ -1644,7 +1644,7 @@ void generateFrog(vec3 cameraPosition, vector<Frog*>& frogList, float cameraHori
             float zPos = randomInRange(-100.0f, 100.0f);
             float frogSize = randomInRange(0.1f, 2.0f);
             Frog* pointer = new Frog(sphere2VAO, sphere2Vertices,textures);
-            pointer->frog.setTransformPosition(xPos + cameraPosition.x, frogSize * 5.0f, zPos + cameraPosition.z);
+            pointer->frog.setTransformPosition(xPos + cameraPosition.x, frogSize * 5.7f, zPos + cameraPosition.z);
             pointer->frog.setTransformRotation(0, randomInRange(0, 360.0f), 0);
             pointer->frog.setTransformScale(frogSize, frogSize, frogSize);
 
