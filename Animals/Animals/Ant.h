@@ -58,6 +58,7 @@ private:
     bool antennaDown = false;
     bool goingUp = true;
     bool goingDown = false;
+    float rotationModel = randomInRangeAnt(0, 360);
     float yaw = 0;
     float pitch = 0;
     float roll = 0;

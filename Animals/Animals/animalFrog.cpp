@@ -1,4 +1,5 @@
 #include "animalFrog.h"
+#include <random>
 
 void generateFrog(GLuint vaSphere, int vertCount, std::vector<GLuint>* textures, gameObject& frog,
 	gameObject& leftHip_joint, gameObject& rightHip_joint, gameObject& leftKnee_joint, gameObject& rightKnee_joint, gameObject& leftAnkle_joint, gameObject& rightAnkle_joint,
@@ -102,10 +103,11 @@ void generateFrog(GLuint vaSphere, int vertCount, std::vector<GLuint>* textures,
 	GLuint textureChoice;
 	textureChoice = 1;
 
+
 	//colour 
-	float red = 154.0f/255.0f;
-	float green = 205.0f/255.0f;
-	float blue = 50.0f/255.0f;
+	float red = randomFloatFrog(0.0,1.0);
+	float green = randomFloatFrog(0.0, 1.0);
+	float blue = randomFloatFrog(0.0, 1.0);
 
 	//Generate body shape values
 	float xTorso = 1.0f;
@@ -418,4 +420,37 @@ void generateFrog(GLuint vaSphere, int vertCount, std::vector<GLuint>* textures,
 	leftLFinger->setColourVector(red, green, blue);
 	leftLFinger->setTransformPosition(-xTorso * 2.5, -yTorso * 9, zTorso * 2.2);
 	leftLFinger->setTransformRotation(30.0f, 45.0f, 0.0f);
+}
+
+float randomFloatFrog(float lowerBound, float upperBound) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dist(lowerBound, upperBound);
+	return dist(gen);
+}
+
+Frog::Frog(GLuint VAO, int vertCount, std::vector<GLuint>* textures) {
+	generateFrog(VAO, vertCount, textures,  frog,
+		 leftHip_joint,  rightHip_joint,  leftKnee_joint,  rightKnee_joint,  leftAnkle_joint,  rightAnkle_joint,
+		 leftShoulder_joint,  rightShoulder_joint,  leftElbow_joint,  rightElbow_joint,  leftWrist_joint,  rightWrist_joint,
+		 leftCheek_joint,  rightCheek_joint);
+}
+
+void Frog::cheekPuff() {
+
+	leftCheek_joint.setTransformScale(cheekScale, cheekScale, cheekScale);
+	rightCheek_joint.setTransformScale(cheekScale, cheekScale, cheekScale);
+
+	if (cheekIncrease == true && cheekScale <= cheekMaxSize) {
+		cheekScale += 0.01;
+	}
+	else if (cheekIncrease == false && cheekScale >= cheekMinSize) {
+		cheekScale -= 0.01;
+	}
+	else if (cheekScale > cheekMaxSize && cheekIncrease == true) {
+		cheekIncrease = false;
+	}
+	else if (cheekScale < cheekMinSize && cheekIncrease == false) {
+		cheekIncrease = true;
+	}
 }

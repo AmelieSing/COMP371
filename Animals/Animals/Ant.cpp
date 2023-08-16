@@ -175,7 +175,8 @@ void Ant::drawShadow() {
     glUseProgram(shaderShadowProgram);
     glBindVertexArray(sphereVao);
     // BODY
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * scale(mat4(1.0f), bodySize);
@@ -186,7 +187,8 @@ void Ant::drawShadow() {
 
     // HEAD
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
     //    * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), headPosition)
@@ -198,7 +200,8 @@ void Ant::drawShadow() {
 
     // Tail
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
    //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), tailPosition)
@@ -210,7 +213,8 @@ void Ant::drawShadow() {
 
     // Eye L
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionL)
@@ -222,7 +226,8 @@ void Ant::drawShadow() {
 
     // Eye R
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionR)
@@ -234,7 +239,8 @@ void Ant::drawShadow() {
 
     // LEG1 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //      * translate(mat4(1.0f), bodyPosition) 
         * translate(mat4(1.0f), leg1PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -248,7 +254,8 @@ void Ant::drawShadow() {
 
     // LEG1 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //       * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg1PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -263,7 +270,8 @@ void Ant::drawShadow() {
 
     // LEG2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         // * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -277,7 +285,8 @@ void Ant::drawShadow() {
 
     // LEG2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //   * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -291,7 +300,8 @@ void Ant::drawShadow() {
 
     // LEG3 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -305,7 +315,8 @@ void Ant::drawShadow() {
 
     // Antenna L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -319,7 +330,8 @@ void Ant::drawShadow() {
 
     // Antenna R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -333,7 +345,8 @@ void Ant::drawShadow() {
 
     // Antenna 2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antenna2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -347,7 +360,8 @@ void Ant::drawShadow() {
 
     // Antenna 2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antenna2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -368,7 +382,9 @@ void Ant::draw() {
     glUniform1i(texture1Uniform, 6);
     // BODY
 
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = 
+        rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * scale(mat4(1.0f), bodySize);
@@ -380,7 +396,8 @@ void Ant::draw() {
 
     // HEAD
      glBindVertexArray(sphereVao);
-     modelMatrix = scale(mat4(1.0f), scaleFactor)
+     modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+         * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), headPosition)
@@ -393,7 +410,8 @@ void Ant::draw() {
 
     // Tail
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), tailPosition)
@@ -409,7 +427,8 @@ void Ant::draw() {
     glUniform1i(texture1Uniform, 1);
     // Eye L
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionL)
@@ -422,7 +441,8 @@ void Ant::draw() {
 
     // Eye R
     glBindVertexArray(sphereVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //     * translate(mat4(1.0f), bodyPosition)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
         * translate(mat4(1.0f), eyePositionR)
@@ -438,7 +458,8 @@ void Ant::draw() {
     glUniform1i(texture1Uniform, 6);
     // LEG1 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
   //      * translate(mat4(1.0f), bodyPosition) 
         * translate(mat4(1.0f), leg1PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -453,7 +474,8 @@ void Ant::draw() {
 
     // LEG1 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
  //       * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg1PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -469,7 +491,8 @@ void Ant::draw() {
     
     // LEG2 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
        // * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -484,7 +507,8 @@ void Ant::draw() {
 
     // LEG2 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
      //   * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg2PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -499,7 +523,8 @@ void Ant::draw() {
 
     // LEG3 L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
       //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -514,7 +539,8 @@ void Ant::draw() {
 
     // LEG3 R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
       //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), leg3PositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -529,7 +555,8 @@ void Ant::draw() {
 
     // Antenna L
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionL)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -544,7 +571,8 @@ void Ant::draw() {
 
     // Antenna R
     glBindVertexArray(cubeVao);
-    modelMatrix = scale(mat4(1.0f), scaleFactor)
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         //  * translate(mat4(1.0f), bodyPosition)
         * translate(mat4(1.0f), antennaPositionR)
         * rotate(mat4(1.0f), radians(yaw), vec3(0.0f, 1.0f, 0.0f))
@@ -559,7 +587,8 @@ void Ant::draw() {
 
     // Antenna 2 L
     glBindVertexArray(cubeVao);
-    modelMatrix =
+    modelMatrix = rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        *
         scale(mat4(1.0f), scaleFactor)
          * translate(mat4(1.0f), antenna2PositionL) 
         * rotate(mat4(1.0f), radians(antennaAngle), vec3(0.0f, 0.0f, 1.0f))
@@ -574,7 +603,8 @@ void Ant::draw() {
     // Antenna 2 R
     glBindVertexArray(cubeVao);
     modelMatrix =
-        scale(mat4(1.0f), scaleFactor)
+        rotate(mat4(1.0f), radians(rotationModel), vec3(0.0f, 1.0f, 0.0f))
+        * scale(mat4(1.0f), scaleFactor)
         * translate(mat4(1.0f), antenna2PositionR)
         * rotate(mat4(1.0f), radians(antennaAngle), vec3(0.0f, 0.0f, 1.0f))
 
