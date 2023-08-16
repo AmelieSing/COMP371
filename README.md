@@ -10,10 +10,11 @@
 - Skybox
 - Canvas layer for displaying UI elements
 
-![ezgif com-optimize](https://github.com/AmelieSing/COMP371/assets/77857217/6db9fa7b-2775-4dde-9dc7-165fef419411)
+![ezgif com-optimize (1)](https://github.com/AmelieSing/COMP371/assets/77857217/e5bb0604-6c54-4501-8634-16e14fbd96d9)
 
 ## Controls:
 - Mouse : move camera
+
 - R: Generate random Animal
 - Space: jump
 - H: Toggle Title
